@@ -84,6 +84,13 @@ body{background:radial-gradient(1100px 480px at 12% -10%,#1b2433 0%,transparent 
 .charts{grid-template-columns:repeat(2,1fr)}
 @media(max-width:920px){.charts{grid-template-columns:1fr}}
 .tv{height:340px}
+.ig{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px}
+.ig h3{font-size:.82rem;color:var(--gold);margin-bottom:6px}
+.ir{display:flex;justify-content:space-between;gap:8px;font-size:.78rem;padding:4px 0;border-bottom:1px solid var(--line)}
+.ir span:first-child{color:var(--mut)}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-left:8px;background:#566}
+.dot.u{background:var(--up)} .dot.d{background:var(--down)}
+.bar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:4px 0 6px}.bar i{display:block}
 </style>
 </head>
 <body>
@@ -161,12 +168,10 @@ body{background:radial-gradient(1100px 480px at 12% -10%,#1b2433 0%,transparent 
         <div class="hint">Funding muy positivo suele indicar longs apretados y más riesgo de barrida hacia abajo.</div>
       </div>
 
-      <div class="card">
-        <h2>Noticias de Solana</h2>
-        <div id="news"><div class="hint">Cargando…</div></div>
-      </div>
+      <div class="card"><h2>Noticias y análisis</h2><a class="btn" href="https://chainpulse.ai/?fbclid=PAdGRzdgUaVtVwZG9mAmV4dG4DYWVtAjExAHNydGMGYXBwX2lkDzU2NzA2NzM0MzM1MjQyNwABp6EeGNKGtQ-WbtqmCaUBsN3cpNKnkG_Et_OcdomTVZ1dhGpa0JbQHlg6qobb_aem_W8P4VDlib6t9GJNmrq0SNQ" target="_blank" rel="noopener">Abrir ChainPulse</a></div>
     </div>
 
+    <div class="card full"><h2>Panel de 58 indicadores adicionales</h2><div id="ind-sum"></div><div id="ind-grid" class="ig"></div><div class="hint">Cada indicador vota a favor (verde), en contra (rojo) o neutral (gris) de una compra long. Los osciladores en zona extrema votan a favor del rebote o en contra del techo.</div></div>
     <div class="card full">
       <h2>Gráficos (TradingView)</h2>
       <div class="charts">
@@ -231,8 +236,8 @@ function swings(k, side=3){
 const TF = { '15m':null, '1h':null, '4h':null, '1d':null };
 const ctx = { price:null, funding:null, fng:null, oi:null, mark:null };
 
-async function getKlines(interval){
-  const r = await fetch(`https://api.binance.com/api/v3/klines?symbol=${SYMBOL}&interval=${interval}&limit=300`);
+async function getKlines(interval,sym=SYMBOL){
+  const r = await fetch(`https://api.binance.com/api/v3/klines?symbol=${sym}&interval=${interval}&limit=300`);
   if(!r.ok) throw new Error('klines '+r.status);
   const raw = await r.json();
   const k = raw.map(x=>({t:x[0],o:+x[1],h:+x[2],l:+x[3],c:+x[4],v:+x[5]}));
@@ -271,23 +276,15 @@ async function loadAll(){
     const r = await fetch('https://api.alternative.me/fng/?limit=1');
     const j = await r.json(); ctx.fng=j.data[0];
   }catch(e){}
+  const fj=async u=>{try{return await (await fetch('https://fapi.binance.com/futures/data/'+u)).json()}catch(e){return null}};
+  const q='?symbol='+SYMBOL+'&period=1h&limit=';
+  const ls=await fj('globalLongShortAccountRatio'+q+'1'); if(ls&&ls[0]) ctx.ls=+ls[0].longShortRatio;
+  const tk=await fj('takerlongshortRatio'+q+'1'); if(tk&&tk[0]) ctx.taker=+tk[0].buySellRatio;
+  const oh=await fj('openInterestHist'+q+'24'); if(oh&&oh.length>1) ctx.oiChg=(+oh[oh.length-1].sumOpenInterest/+oh[0].sumOpenInterest-1)*100;
+  try{ ctx.b4=await getKlines('4h','BTCUSDT'); ctx.bd=await getKlines('1d','BTCUSDT'); }catch(e){}
   render();
 }
 
-async function loadNews(){
-  const box=$('news');
-  try{
-    const r = await fetch('https://min-api.cryptocompare.com/data/v2/news/?lang=EN&categories=SOL');
-    const j = await r.json();
-    const items=(j.Data||[]).slice(0,6);
-    if(!items.length) throw 0;
-    box.innerHTML = items.map(n=>{
-      const h=Math.max(1,Math.round((Date.now()/1000-n.published_on)/3600));
-      const t=document.createElement('div'); t.textContent=n.title;
-      return `<div class="news"><a href="${n.url}" target="_blank" rel="noopener">${t.innerHTML}</a><small>${n.source_info?.name||n.source} · hace ${h} h</small></div>`;
-    }).join('');
-  }catch(e){ box.innerHTML='<div class="hint">No se pudieron cargar las noticias. Probá recargar la página.</div>'; }
-}
 
 function buildLevels(p){
   const raw=[],add=(v,l)=>{if(v>0&&isFinite(v))raw.push({p:v,l})},d=TF['1d'];
@@ -320,6 +317,79 @@ function renderSide(p){
   const L=buildLevels(p),R=L.filter(x=>x.p>p).sort((a,b)=>a.p-b.p).slice(0,6).reverse(),S=L.filter(x=>x.p<=p).sort((a,b)=>b.p-a.p).slice(0,6);
   const li=(x,k)=>`<div class="lv ${k}"><span class="num">${usd(x.p)}</span><i>${'●'.repeat(Math.min(x.n,5))}</i><em class="num">${pct((x.p/p-1)*100)}</em><small>${x.l}</small></div>`;
   $('ladder').innerHTML=R.map(x=>li(x,'r')).join('')+`<div class="lv now"><span class="num">${usd(p)}</span><small>precio actual</small></div>`+S.map(x=>li(x,'s')).join('')}
+
+function buildIndicators(p){
+  const o=[],a=(g,n,v,s)=>o.push({g,n,v:v==null?'':v,s}),h=TF['1h'],f=TF['4h'],d=TF['1d'];
+  if(!h||!f||!d)return o;
+  const L=x=>x[x.length-1],cl=t=>t.k.map(x=>x.c),S=(c,n)=>c.slice(-n).reduce((x,y)=>x+y,0)/n,sg=x=>x>0?1:x<0?-1:0;
+  const c1=cl(h),c4=cl(f),cd=cl(d),fx=fmt,roc=(c,n)=>(L(c)/c[c.length-1-n]-1)*100;
+  const hh=(k,n)=>Math.max(...k.slice(-n).map(x=>x.h)),ll=(k,n)=>Math.min(...k.slice(-n).map(x=>x.l));
+  const T='Tendencia',M='Momentum',V='Volatilidad',W='Volumen y flujo',E='Estructura',X='Derivados y mercado';
+  // Tendencia
+  [['SMA20 1h',S(c1,20)],['SMA50 1h',S(c1,50)],['SMA100 4h',S(c4,100)],['SMA200 diario',S(cd,200)]].forEach(([n,v])=>a(T,'Precio vs '+n,usd(v),sg(p-v)));
+  a(T,'EMA9 vs EMA21 1h','',sg(L(ema(c1,9))-L(ema(c1,21))));
+  a(T,'EMA21 vs EMA55 4h','',sg(L(ema(c4,21))-L(ema(c4,55))));
+  a(T,'EMA50 vs EMA200 4h','',sg(f.ema50-f.ema200));
+  a(T,'EMA50 vs EMA200 diario','',sg(d.ema50-d.ema200));
+  const e20=ema(c1,20),e5=ema(c4,50);
+  a(T,'Pendiente EMA20 1h','',sg(L(e20)-e20[e20.length-4]));
+  a(T,'Pendiente EMA50 4h','',sg(L(e5)-e5[e5.length-4]));
+  const tk=(hh(f.k,9)+ll(f.k,9))/2,kj=(hh(f.k,26)+ll(f.k,26))/2;
+  a(T,'Ichimoku Tenkan vs Kijun 4h','',sg(tk-kj)); a(T,'Precio vs Kijun 4h',usd(kj),sg(p-kj));
+  const lr=(c,n)=>{const y=c.slice(-n),m=(n-1)/2,my=S(y,n);let u=0,e=0;y.forEach((v,i)=>{u+=(i-m)*(v-my);e+=(i-m)**2});return u/e};
+  a(T,'Regresión lineal 20 velas 1h',fx(lr(c1,20),3),sg(lr(c1,20)));
+  const w=h.k.slice(-25);a(T,'Aroon 25 1h','',sg(w.findIndex(x=>x.h===Math.max(...w.map(y=>y.h)))-w.findIndex(x=>x.l===Math.min(...w.map(y=>y.l)))));
+  a(T,'Precio vs medio Donchian 20 1h','',sg(p-(hh(h.k,20)+ll(h.k,20))/2));
+  // Momentum
+  [['RSI 14 1h',h.rsi],['RSI 14 4h',f.rsi],['RSI 14 diario',d.rsi]].forEach(([n,v])=>a(M,n,fx(v,0),v>70?-1:v<30?1:sg(v-50)));
+  a(M,'MACD histograma 1h',fx(h.hist,3),sg(h.hist)); a(M,'MACD histograma diario',fx(d.hist,3),sg(d.hist));
+  a(M,'Línea MACD 4h','',sg(L(ema(c4,12))-L(ema(c4,26))));
+  [['ROC 12 1h',c1,12],['ROC 24 4h',c4,24],['ROC 12 diario',cd,12]].forEach(([n,c,k])=>a(M,n,fx(roc(c,k))+'%',sg(roc(c,k))));
+  const tp=h.k.slice(-20).map(x=>(x.h+x.l+x.c)/3),mt=S(tp,20),cci=(L(tp)-mt)/(0.015*(tp.reduce((x,y)=>x+Math.abs(y-mt),0)/20));
+  a(M,'CCI 20 1h',fx(cci,0),cci>200?-1:cci<-100?1:sg(cci));
+  const wr=-100*(hh(h.k,14)-p)/((hh(h.k,14)-ll(h.k,14))||1);a(M,'Williams %R 14 1h',fx(wr,0),wr<-80?1:wr>-20?-1:0);
+  a(M,'Estocástico 14 1h',fx(h.stoch,0),h.stoch<20?1:h.stoch>80?-1:0); a(M,'Estocástico 14 4h',fx(f.stoch,0),f.stoch<20?1:f.stoch>80?-1:0);
+  const md=h.k.map(x=>(x.h+x.l)/2),ao=S(md,5)-S(md,34);a(M,'Awesome Oscillator 1h',fx(ao,3),sg(ao));
+  // Volatilidad
+  [['1h',h],['4h',f]].forEach(([n,t])=>{const b=(p-t.bbL)/(t.bbU-t.bbL)*100;a(V,'Bollinger %B '+n,fx(b,0)+'%',b<10?1:b>90?-1:0)});
+  a(V,'Precio vs media Bollinger 4h','',sg(p-(f.bbU+f.bbL)/2));
+  a(V,'Keltner 1h (EMA20 ± 2 ATR)','',p<L(e20)-2*h.atr?1:p>L(e20)+2*h.atr?-1:0);
+  const ap=d.atr/p*100;a(V,'ATR diario %',fx(ap,1)+'%',ap<5?1:ap>8?-1:0);
+  const bw=(f.bbU-f.bbL)/((f.bbU+f.bbL)/2)*100;a(V,'Ancho Bollinger 4h',fx(bw,1)+'%',bw>12?-1:0);
+  const ex=(p-L(e20))/h.atr;a(V,'Extensión vs EMA20 (ATR)',fx(ex,1),ex>2.5?-1:ex<-2?1:0);
+  // Volumen y flujo
+  let ob=0;const obs=h.k.map((x,i)=>i?(ob+=sg(x.c-h.k[i-1].c)*x.v):0);a(W,'OBV pendiente 1h','',sg(L(obs)-obs[obs.length-21]));
+  const q=h.k.slice(-15);let pf=0,nf=0;q.forEach((x,i)=>{if(!i)return;const t=(x.h+x.l+x.c)/3,u=(q[i-1].h+q[i-1].l+q[i-1].c)/3;t>u?pf+=t*x.v:nf+=t*x.v});
+  const mfi=100-100/(1+pf/(nf||1));a(W,'MFI 14 1h',fx(mfi,0),mfi<20?1:mfi>80?-1:sg(mfi-50));
+  const z=h.k.slice(-20),mf=x=>(x.h-x.l)?((x.c-x.l)-(x.h-x.c))/(x.h-x.l):0,cmf=z.reduce((r,x)=>r+mf(x)*x.v,0)/z.reduce((r,x)=>r+x.v,0);
+  a(W,'Chaikin Money Flow 20 1h',fx(cmf,2),sg(cmf));
+  const lk=L(h.k);a(W,'Volumen relativo con vela 1h',fx(h.vol,2)+'x',h.vol>1?sg(lk.c-lk.o):0);
+  const v24=h.k.slice(-24),vw=v24.reduce((r,x)=>r+(x.h+x.l+x.c)/3*x.v,0)/v24.reduce((r,x)=>r+x.v,0);a(W,'Precio vs VWAP 24h',usd(vw),sg(p-vw));
+  let ad=0;const ads=h.k.map(x=>(ad+=mf(x)*x.v));a(W,'Línea A/D pendiente 1h','',sg(L(ads)-ads[ads.length-21]));
+  const fi=ema(h.k.map((x,i)=>i?(x.c-h.k[i-1].c)*x.v:0),13);a(W,'Force Index 13 1h','',sg(L(fi)));
+  const y=L(d.k);a(W,'Cierre diario en mitad alta','',sg((y.c-y.l)/((y.h-y.l)||1)-0.5));
+  // Estructura
+  [['1h',h],['4h',f]].forEach(([n,t])=>{const l=t.sw.lows.slice(-2),u=t.sw.highs.slice(-2);a(E,'Máximos y mínimos '+n,l[1]>l[0]&&u[1]>u[0]?'crecientes':l[1]<l[0]&&u[1]<u[0]?'decrecientes':'mixtos',l[1]>l[0]&&u[1]>u[0]?1:l[1]<l[0]&&u[1]<u[0]?-1:0)});
+  const dm=(p/hh(d.k,30)-1)*100;a(E,'Distancia al máximo 30d',fx(dm,1)+'%',dm>-8?1:dm<-25?-1:0);
+  a(E,'Vela diaria de ayer','',sg(y.c-y.o));
+  a(E,'Retorno 7 días',fx(roc(cd,7))+'%',sg(roc(cd,7))); a(E,'Retorno 30 días',fx(roc(cd,30))+'%',sg(roc(cd,30)));
+  // Derivados y mercado
+  if(ctx.funding!=null)a(X,'Funding rate',fx(ctx.funding*100,4)+'%',ctx.funding>0.0005?-1:ctx.funding<0?1:0);
+  if(ctx.mark)a(X,'Base mark vs spot',pct((ctx.mark/p-1)*100),ctx.mark/p>1.002?-1:ctx.mark<p?1:0);
+  if(ctx.fng)a(X,'Miedo y codicia',ctx.fng.value,ctx.fng.value<25?1:ctx.fng.value>75?-1:0);
+  if(ctx.ls!=null)a(X,'Ratio long/short (cuentas)',fx(ctx.ls,2),ctx.ls>1.8?-1:ctx.ls<1?1:0);
+  if(ctx.taker!=null)a(X,'Taker compra/venta 1h',fx(ctx.taker,2),sg(ctx.taker-1));
+  if(ctx.oiChg!=null){const pc=roc(c1,24);a(X,'OI 24h vs precio',pct(ctx.oiChg),ctx.oiChg>0?(pc>0?1:-1):0)}
+  if(ctx.b4)a(X,'BTC vs EMA50 4h','',sg(ctx.b4.close-ctx.b4.ema50));
+  if(ctx.bd)a(X,'BTC vs EMA200 diario','',sg(ctx.bd.close-ctx.bd.ema200));
+  return o}
+
+function renderInd(p){
+  const I=buildIndicators(p);if(!I.length)return;
+  const b=I.filter(x=>x.s>0).length,r=I.filter(x=>x.s<0).length,n=I.length-b-r;
+  $('ind-sum').innerHTML=`<div class="bar"><i style="width:${b/I.length*100}%;background:var(--up)"></i><i style="width:${n/I.length*100}%;background:#566"></i><i style="width:${r/I.length*100}%;background:var(--down)"></i></div><div class="hint" style="margin:0 0 14px"><b class="up">${b} alcistas</b> · ${n} neutrales · <b class="down">${r} bajistas</b> de ${I.length}</div>`;
+  const g={};I.forEach(x=>(g[x.g]=g[x.g]||[]).push(x));
+  $('ind-grid').innerHTML=Object.keys(g).map(k=>`<div><h3>${k}</h3>${g[k].map(x=>`<div class="ir"><span>${x.n}</span><span class="num">${x.v}<i class="dot ${x.s>0?'u':x.s<0?'d':''}"></i></span></div>`).join('')}</div>`).join('')}
 
 /* ---------- Lógica del plan ---------- */
 function trendOf(t, price){
@@ -360,6 +430,8 @@ function computePlan(price){
   add(tr1.s>=2?1:(tr1.s<=-2?-1:0), '1h '+tr1.label.toLowerCase());
   const tr1d=trendOf(TF['1d'],price); add(tr1d.s>=2?1:(tr1d.s<=-2?-1:0), 'diario '+tr1d.label.toLowerCase());
   add(t4.hist>0?1:-1, 'MACD 4h '+(t4.hist>0?'positivo':'negativo'));
+  const IN=buildIndicators(price),bu=IN.filter(x=>x.s>0).length,be=IN.filter(x=>x.s<0).length,net=IN.length?(bu-be)/IN.length*100:0;
+  add(net>25?2:net>10?1:net<-25?-2:net<-10?-1:0,'indicadores: '+bu+' alcistas, '+be+' bajistas de '+IN.length);
   if(t15.rsi>72) add(-1,'RSI 15m sobrecomprado ('+fmt(t15.rsi,0)+')');
   else if(t15.rsi<32) add(1,'RSI 15m sobrevendido ('+fmt(t15.rsi,0)+')');
   if(ctx.funding!=null){
@@ -377,7 +449,7 @@ function computePlan(price){
   if(slPct>6) warns.push('El soporte está lejos: el stop es muy amplio para este tamaño de movimiento.');
 
   let kind, tag, why;
-  if(score>=4 && nearSupport){
+  if(score>=5 && net>10 && nearSupport){
     kind='go'; tag='Entrar long ahora';
     why=`Tendencia a favor y el precio está a ${fmt(distPct,2)}% del soporte (${usd(entry)}). El stop va debajo del soporte, con el riesgo bien definido.`;
   } else if(score>=3){
@@ -403,7 +475,7 @@ function render(){
     const cls = tr.s>=2?'up':(tr.s<=-2?'down':'');
     return `<tr><td>${name}</td><td class="${cls}">${tr.label}</td><td class="num">${fmt(t.rsi,0)}</td><td class="num">${pct((p/t.ema50-1)*100)}</td><td class="num">${fmt(t.atr/p*100,2)}%</td></tr>`;
   }).join('');
-  $('tf-body').innerHTML=rows; renderSide(price);
+  $('tf-body').innerHTML=rows; renderSide(price); renderInd(price);
 
   if(ctx.funding!=null){ $('d-fund').textContent=pct(ctx.funding*100).replace('%','')+'%'; $('d-fund').className='num '+(ctx.funding>0.0005?'down':(ctx.funding<0?'up':'')); }
   if(ctx.oi!=null) $('d-oi').textContent=fmt(ctx.oi,0)+' SOL';
@@ -415,7 +487,7 @@ function render(){
 
   const v=$('verdict'); v.className='verdict '+P.kind;
   $('v-tag').textContent=P.tag; $('v-why').textContent=P.why;
-  $('v-chips').innerHTML=P.chips.map(c=>`<span class="chip ${c.v>0?'up':(c.v<0?'dn':'')}">${c.txt}</span>`).join('') + `<span class="chip">puntaje ${P.score}</span>`;
+  $('v-chips').innerHTML=P.chips.map(c=>`<span class="chip ${c.v>0?'up':(c.v<0?'dn':'')}">${c.txt}</span>`).join('');
 
   $('p-entry').textContent=usd(P.entry); $('p-entry-s').textContent=`${fmt(P.distPct,2)}% bajo el precio`;
   $('p-sl').textContent=usd(P.sl); $('p-sl-s').textContent=`-${fmt(P.slPct,2)}% (${fmt(P.slPct*P.lev,0)}% del margen)`;
@@ -457,8 +529,8 @@ window.onload=()=>{
   [['tv-15m','15'],['tv-1h','60'],['tv-4h','240'],['tv-1d','D']].forEach(([id,iv])=>{
     new TradingView.widget({width:'100%',height:340,symbol:'BINANCE:SOLUSDT',interval:iv,theme:'dark',style:'1',locale:'es',hide_top_toolbar:false,container_id:id});
   });
-  connect(); loadAll(); loadNews();
-  setInterval(loadAll,60000); setInterval(loadNews,600000);
+  connect(); loadAll();
+  setInterval(loadAll,60000);
 };
 </script>
 </body>
