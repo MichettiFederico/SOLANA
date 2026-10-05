@@ -92,16 +92,17 @@ td:first-child,th:first-child{text-align:left;color:var(--mut)}th{font-weight:50
     <div class="card"><h2>Gestión de riesgo</h2>
       <div class="row">
         <div><label for="r-cap">Capital (USDT)</label><input id="r-cap" class="num" type="number" value="1000" min="1"></div>
-        <div><label for="r-risk">Riesgo por trade (%)</label><input id="r-risk" class="num" type="number" value="1" min="0.1" max="10" step="0.1"></div>
+        <div><label for="r-frac">% del capital como margen</label><input id="r-frac" class="num" type="number" value="20" min="1" max="100" step="1"></div>
         <div><label for="r-lev">Apalancamiento</label><select id="r-lev"><option>3</option><option>5</option><option selected>10</option><option>15</option><option>20</option></select></div>
       </div>
       <table style="margin-top:12px">
         <tr><td>Tamaño de posición</td><td id="r-size" class="num">—</td></tr>
         <tr><td>Margen a usar</td><td id="r-margin" class="num">—</td></tr>
+        <tr><td>Respaldo en cuenta (resto del capital)</td><td id="r-res" class="num">—</td></tr>
         <tr><td>Pérdida si toca el stop</td><td id="r-loss" class="num down">—</td></tr>
         <tr><td>Ganancia (50% TP1, 30% TP2, 20% TP3)</td><td id="r-gain" class="num up">—</td></tr>
       </table>
-      <div class="hint">El tamaño sale del riesgo que aceptás perder, no del apalancamiento. Con 10X y un stop de 3.5% perdés ~35% del margen en cada stop.</div>
+      <div class="hint">Con 20% del capital como margen a 10X la posición vale 2× tu capital, así que cada stop te cuesta el doble de su distancia en %: un stop a 3% son −6% de tu capital. El otro 80% queda en la cuenta como respaldo (margen cruzado), por eso la liquidación queda muy lejos; lo que te limita es el stop, no la liquidación.</div>
     </div>
   </div>
   <div>
@@ -313,7 +314,8 @@ function computePlan(price){
   const Lv=buildLevels(price),ss=Lv.filter(x=>x.p<price*0.998),rs=Lv.filter(x=>x.p>price*1.002),strong=ss.filter(x=>x.n>=2);
   const sObj=(strong.length?strong:ss).sort((a,b)=>b.p-a.p)[0],support=sObj?sObj.p:price*0.98;
   const rObj=rs.sort((a,b)=>a.p-b.p)[0],resistance=rObj?rObj.p:null,src='confluencia de '+(sObj?sObj.n:1)+' niveles';
-  const entry=support,sl=support-0.5*t1.atr,risk=entry-sl,slPct=risk/entry*100,tp=[1.5,2.5,4].map(m=>entry+risk*m),liq=entry*(1-1/lev+0.005);
+  const fr=Math.min(1,Math.max(0.01,(+$('r-frac').value||20)/100)),expo=fr*lev;
+  const entry=support,sl=support-0.5*t1.atr,risk=entry-sl,slPct=risk/entry*100,tp=[1.5,2.5,4].map(m=>entry+risk*m),liq=Math.max(0,entry*(1-(1-0.005*expo)/expo));
   let score=0;const chips=[],add=(v,txt)=>{score+=v;chips.push({v,txt})};
   add(tr4.s>=2?2:tr4.s<=-2?-2:0,'4h '+tr4.label.toLowerCase());
   add(tr1.s>=2?1:tr1.s<=-2?-1:0,'1h '+tr1.label.toLowerCase());
@@ -326,7 +328,7 @@ function computePlan(price){
   if(ctx.funding!=null){if(ctx.funding>0.0005)add(-1,'funding alto');else if(ctx.funding<-0.0002)add(1,'funding negativo')}
   const distPct=(price-entry)/price*100,nearSupport=(price-entry)<=Math.max(0.6*t15.atr,price*0.004);
   const warns=[];
-  if(slPct>=100/lev*0.8)warns.push(`Con ${lev}X el stop (${fmt(slPct,1)}%) queda casi pegado a la liquidación. Bajá el apalancamiento.`);
+  if(slPct*expo>10)warns.push(`Con tu tamaño (${fmt(expo,1)}× el capital) este stop cuesta ${fmt(slPct*expo,1)}% del capital. Considerá un soporte más cercano o menos margen.`);
   if(resistance&&resistance<tp[0])warns.push(`La resistencia en ${usd(resistance)} queda antes de TP1: la relación riesgo/beneficio real es menor a 1.5R.`);
   if(slPct>6)warns.push('El soporte está lejos: el stop es muy amplio para este tamaño de movimiento.');
   let kind,tag,why;
@@ -334,7 +336,7 @@ function computePlan(price){
   else if(score>=3){kind='wait';tag=`Esperar retroceso a ${usd(entry)}`;why=`El contexto favorece longs pero el precio está ${fmt(distPct,2)}% arriba del soporte. Dejá una orden límite en ${usd(entry)} o esperá una vela de rechazo en 15m.`}
   else if(score>=0){kind='wait';tag='Esperar, sin ventaja clara';why='Las temporalidades no se alinean. Sin tendencia clara el stop salta con más frecuencia que el objetivo.'}
   else{kind='no';tag='No operar long';why='La tendencia de 4h/1h está en contra. Un long acá va contra el flujo y un soporte débil suele romperse.'}
-  return{price,entry,sl,tp,liq,slPct,support,resistance,src,kind,tag,why,chips,warns,lev,distPct}}
+  return{price,entry,sl,tp,liq,slPct,support,resistance,src,kind,tag,why,chips,warns,lev,fr,expo,distPct}}
 
 function renderInd(){
   if(!ALL.length)return;
@@ -368,16 +370,16 @@ function render(){
   $('verdict').className='verdict '+P.kind;$('v-tag').textContent=P.tag;$('v-why').textContent=P.why;
   $('v-chips').innerHTML=P.chips.map(c=>`<span class="chip ${c.v>0?'up':c.v<0?'dn':''}">${c.txt}</span>`).join('');
   $('p-entry').textContent=usd(P.entry);$('p-entry-s').textContent=`${fmt(P.distPct,2)}% bajo el precio`;
-  $('p-sl').textContent=usd(P.sl);$('p-sl-s').textContent=`-${fmt(P.slPct,2)}% (${fmt(P.slPct*P.lev,0)}% del margen)`;
-  $('p-liq').textContent=usd(P.liq);$('p-liq-s').textContent=`${P.lev}X, estimación`;
+  $('p-sl').textContent=usd(P.sl);$('p-sl-s').textContent=`-${fmt(P.slPct,2)}% · ${fmt(P.slPct*P.lev,0)}% del margen · ${fmt(P.slPct*P.expo,1)}% del capital`;
+  $('p-liq').textContent=usd(P.liq);$('p-liq-s').textContent=`${P.lev}X · margen cruzado, estimación`;
   [1,2,3].forEach((n,i)=>{$('p-tp'+n).textContent=usd(P.tp[i]);$('p-tp'+n+'-s').textContent=pct((P.tp[i]/P.entry-1)*100)});
   $('p-alert').innerHTML=P.warns.map(w=>'⚠ '+w).join('<br>');
   $('levels-note').textContent=`Soporte: ${usd(P.support)} (${P.src}). Resistencia: ${P.resistance?usd(P.resistance):'sin referencia cercana'}.`;
-  const cap=+$('r-cap').value,rk=+$('r-risk').value/100,riskUsd=cap*rk,size=riskUsd/(P.slPct/100),margin=size/P.lev;
+  const cap=+$('r-cap').value,margin=cap*P.fr,size=margin*P.lev,riskUsd=size*P.slPct/100;
   const gain=size*((P.tp[0]/P.entry-1)*0.5+(P.tp[1]/P.entry-1)*0.3+(P.tp[2]/P.entry-1)*0.2);
   $('r-size').textContent=usd(size)+' ('+fmt(size/P.entry,2)+' SOL)';
-  $('r-margin').textContent=usd(margin)+(margin>cap?' · supera tu capital':'');
-  $('r-loss').textContent='-'+usd(riskUsd);$('r-gain').textContent='+'+usd(gain)}
+  $('r-margin').textContent=usd(margin)+' ('+fmt(P.fr*100,0)+'% del capital)';$('r-res').textContent=usd(cap-margin);
+  $('r-loss').textContent='-'+usd(riskUsd)+' ('+fmt(riskUsd/cap*100,1)+'% del capital)';$('r-gain').textContent='+'+usd(gain)}
 
 let ws,lastDraw=0;
 function connect(){
@@ -387,7 +389,7 @@ function connect(){
   ws.onerror=()=>ws.close();
   ws.onmessage=e=>{ctx.price=parseFloat(JSON.parse(e.data).p);$('price').textContent=usd(ctx.price);const now=Date.now();if(now-lastDraw>1000){lastDraw=now;render()}}}
 
-['r-cap','r-risk','r-lev'].forEach(id=>$(id).addEventListener('input',render));
+['r-cap','r-frac','r-lev'].forEach(id=>$(id).addEventListener('input',render));
 $('ind-sel').addEventListener('change',renderInd);
 window.onload=()=>{
   [['tv-15m','15'],['tv-1h','60'],['tv-4h','240'],['tv-1d','D'],['tv-1w','W']].forEach(([id,iv])=>new TradingView.widget({width:'100%',height:340,symbol:'BINANCE:SOLUSDT',interval:iv,theme:'dark',style:'1',locale:'es',hide_top_toolbar:false,container_id:id}));
