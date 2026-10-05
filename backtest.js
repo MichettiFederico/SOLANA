@@ -3,7 +3,7 @@
    Integración: ya viene enlazado al final de index.html (<script src="backtest.js">).
    El modo semanal usa el motor de indicadores IND que está dentro de index.html.
    Agrega una tarjeta "Backtest del plan" con dos modos: plan 1h (long) y semanal long/short.
-   Usa los inputs #r-lev y #r-risk del panel y la constante SYMBOL si existe.
+   Usa los inputs #r-lev y #r-frac (% del capital como margen) del panel y la constante SYMBOL si existe.
    ===================================================================== */
 (function (root) {
 'use strict';
@@ -19,7 +19,7 @@ const DEFAULTS = {
   split: [0.5, 0.3, 0.2],// % de la posición que se cierra en cada TP
   be: false,             // mover stop a break-even al tocar TP1
   lev: 10,
-  riskPct: 1,            // % del capital arriesgado por trade
+  frac: 0.2,             // fracción del capital que va como margen de cada trade (el resto queda de respaldo)
   validBars: 24,         // velas 1h que vive la orden pendiente
   maxHold: 96,           // máx. velas 1h con la posición abierta
   maxSlPct: 6,           // descarta si el stop queda a más de 6%
@@ -200,7 +200,7 @@ function simulate(data, F, userCfg) {
   };
   const exitPart = (px, frac, fee) => { pos.r += frac * (px - pos.entry) / pos.R - frac * fee * px / pos.R; pos.rem -= frac; };
   const finish = (b, label) => {
-    trades.push({ tEntry: k1[pos.iEntry].t, tExit: b.t + HOUR, entry: pos.entry, r: pos.r, bars: pos.hold, out: label });
+    trades.push({ tEntry: k1[pos.iEntry].t, tExit: b.t + HOUR, entry: pos.entry, r: pos.r, rp: pos.R / pos.entry, bars: pos.hold, out: label });
     pos = null;
   };
   const manage = (b, isFill) => {
@@ -256,32 +256,32 @@ function simulate(data, F, userCfg) {
 }
 
 /* ---------------- Métricas ---------------- */
-function stats(trades, riskPct) {
+function stats(trades, expo) {
   const n = trades.length;
   if (!n) return { n: 0 };
-  const risk = riskPct / 100;
-  let eq = 1, peak = 1, dd = 0, cum = 0, pk = 0, ddR = 0, sW = 0, sL = 0, w = 0, st = 0, mx = 0, bars = 0;
+  let eq = 1, peak = 1, dd = 0, cum = 0, pk = 0, ddR = 0, sW = 0, sL = 0, w = 0, st = 0, mx = 0, bars = 0, sRisk = 0, worst = 0;
   const curve = [{ t: trades[0].tEntry, eq: 1 }];
   trades.forEach(t => {
-    eq = Math.max(0, eq * (1 + risk * t.r)); cum += t.r; bars += t.bars;
+    eq = Math.max(0, eq * (1 + expo * t.rp * t.r)); cum += t.r; bars += t.bars;
+    sRisk += expo * t.rp * 100; worst = Math.min(worst, expo * t.rp * t.r * 100);
     peak = Math.max(peak, eq); dd = Math.max(dd, 1 - eq / peak);
     pk = Math.max(pk, cum); ddR = Math.max(ddR, pk - cum);
     if (t.r > 0) { w++; sW += t.r; st = 0; } else { sL += -t.r; st++; mx = Math.max(mx, st); }
     curve.push({ t: t.tExit, eq });
   });
-  return { n, win: w / n * 100, avgR: cum / n, pf: sL ? sW / sL : Infinity, totalR: cum, ddPct: dd * 100, ddR, ret: (eq - 1) * 100, avgBars: bars / n, streak: mx, curve };
+  return { n, win: w / n * 100, avgR: cum / n, pf: sL ? sW / sL : Infinity, totalR: cum, ddPct: dd * 100, ddR, ret: (eq - 1) * 100, avgBars: bars / n, streak: mx, avgRisk: sRisk / n, worst, curve };
 }
 
 function runBacktest(data, F, userCfg) {
-  const cfg = Object.assign({}, DEFAULTS, userCfg);
+  const cfg = Object.assign({}, DEFAULTS, userCfg), expo = cfg.frac * cfg.lev;
   const trades = simulate(data, F, cfg);
   const k1 = data.k1, t0 = k1[F.start].t, t1 = k1[k1.length - 1].t + HOUR, splitT = t0 + 0.7 * (t1 - t0);
   const bh = (k1[k1.length - 1].c / k1[F.start].o - 1) * 100;
   return {
-    cfg, trades, splitT, bh,
-    all: stats(trades, cfg.riskPct),
-    is: stats(trades.filter(t => t.tEntry < splitT), cfg.riskPct),
-    oos: stats(trades.filter(t => t.tEntry >= splitT), cfg.riskPct)
+    cfg, expo, trades, splitT, bh,
+    all: stats(trades, expo),
+    is: stats(trades.filter(t => t.tEntry < splitT), expo),
+    oos: stats(trades.filter(t => t.tEntry >= splitT), expo)
   };
 }
 
@@ -300,9 +300,12 @@ async function loadWeekly(sym) {
 function weeklyTest(k, userCfg) {
   const IND = root.IND;
   if (!IND) throw new Error('Falta el motor de indicadores (viene dentro de index.html).');
-  const cfg = Object.assign({ weeks: 156, th: 0, lev: 1, feeTaker: 0.0005, fundingWeek: 0.0001 * 21, minBars: 60 }, userCfg);
-  const first = Math.max(cfg.minBars, k.length - 1 - cfg.weeks), liqDist = 1 / cfg.lev - 0.005;
-  let eq = 1, bh = 1, prev = null, seg = null, liquidated = false, signalNow = null;
+  const cfg = Object.assign({ weeks: 156, th: 0, lev: 10, frac: 0.2, isolated: false, feeTaker: 0.0005, fundingWeek: 0.0001 * 21, minBars: 60 }, userCfg);
+  // exposición = margen del trade × apalancamiento (20% × 10X = 2× el capital)
+  const expo = cfg.frac * cfg.lev;
+  // cruzado: el resto del capital respalda la posición; aislado: solo el margen del trade
+  const first = Math.max(cfg.minBars, k.length - 1 - cfg.weeks), liqDist = cfg.isolated ? 1 / cfg.lev - 0.005 : (1 - 0.005 * expo) / expo;
+  let eq = 1, bh = 1, prev = null, seg = null, liquidated = false, liqs = 0, signalNow = null;
   const segs = [], rets = [], curve = [], side = { 1: { w: 0, sum: 0, m: 1 }, '-1': { w: 0, sum: 0, m: 1 }, 0: { w: 0 } };
   const closeSeg = () => { if (seg) { segs.push(seg); seg = null; } };
   for (let i = first; i < k.length; i++) {
@@ -312,12 +315,12 @@ function weeklyTest(k, userCfg) {
     const w = k[i + 1];
     let ret = 0, cost = 0;
     if (dir) {
-      ret = dir * (w.c / w.o - 1) * cfg.lev;
+      ret = dir * (w.c / w.o - 1) * expo;
       const adverse = dir === 1 ? (w.l / w.o - 1) : -(w.h / w.o - 1);
-      if (cfg.lev > 1 && adverse <= -liqDist) { ret = -1; liquidated = true; }
-      cost += cfg.fundingWeek * cfg.lev;
+      if (adverse <= -liqDist) { liqs++; if (cfg.isolated) ret = -cfg.frac; else { ret = -1; liquidated = true; } }
+      cost += cfg.fundingWeek * expo;
     }
-    if (prev !== dir) cost += ((prev ? 1 : 0) + (dir ? 1 : 0)) * cfg.feeTaker * cfg.lev;
+    if (prev !== dir) cost += ((prev ? 1 : 0) + (dir ? 1 : 0)) * cfg.feeTaker * expo;
     const net = Math.max(-1, ret - cost);
     eq = Math.max(0, eq * (1 + net)); bh *= w.c / w.o; rets.push(net);
     if (dir) { const b = side[dir]; b.w++; b.sum += net; b.m *= (1 + net); } else side[0].w++;
@@ -336,7 +339,7 @@ function weeklyTest(k, userCfg) {
     ret: (eq - 1) * 100, bh: (bh - 1) * 100, ddPct: dd * 100, sharpe: sd ? mu / sd * Math.sqrt(52) : 0,
     long: { w: side[1].w, avg: side[1].w ? side[1].sum / side[1].w * 100 : 0, tot: (side[1].m - 1) * 100 },
     short: { w: side[-1].w, avg: side[-1].w ? side[-1].sum / side[-1].w * 100 : 0, tot: (side[-1].m - 1) * 100 },
-    flat: side[0].w, liquidated, signalNow, curve, segs
+    expo, flat: side[0].w, liquidated, liqs, signalNow, curve, segs
   };
 }
 
@@ -367,14 +370,14 @@ function initUI() {
     <div class="hint" style="margin:4px 0 10px">Decide solo con el gráfico semanal: al cierre de cada semana, si el puntaje de todos los indicadores semanales es positivo va long la semana siguiente; si es negativo, short. Sin stop: lo único que lo saca es la liquidación.</div>
     <div class="row" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
       <div><label for="bw-weeks">Período</label><select id="bw-weeks"><option value="104">2 años</option><option value="156" selected>3 años</option><option value="260">5 años</option><option value="1000">Máximo disponible</option></select></div>
-      <div><label for="bw-lev">Apalancamiento</label><select id="bw-lev"><option>1</option><option>2</option><option>3</option><option>5</option><option>10</option></select></div>
+      <div><label for="bw-mm">Tipo de margen</label><select id="bw-mm"><option value="cross">Cruzado (el resto del capital respalda)</option><option value="iso">Aislado (solo el margen del trade)</option></select></div>
       <div><label for="bw-th">Zona neutra del puntaje</label><select id="bw-th"><option value="0">Ninguna (siempre long o short)</option><option value="0.1">±0.10 (fuera del mercado)</option><option value="0.2">±0.20 (fuera del mercado)</option></select></div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button id="bw-run">Correr backtest semanal</button><button id="bw-csv" class="ghost">Descargar tramos (CSV)</button></div>
   </div>
   <div id="bt-out" style="margin-top:14px"></div>
   <canvas id="bt-cv" height="170" style="width:100%;display:none;margin-top:10px"></canvas>
-  <div class="hint">Simula el plan del panel vela por vela (1h) con datos históricos de Binance spot. Usa comisiones, slippage en stops y funding. Si el stop y un TP caen en la misma vela, cuenta el stop. El 30% más reciente del período se reporta aparte (out-of-sample) para detectar sobreajuste. Usa el apalancamiento y el riesgo por trade de tu panel.</div>`;
+  <div class="hint">Simula el plan del panel vela por vela (1h) con datos históricos de Binance spot. Usa comisiones, slippage en stops y funding. Si el stop y un TP caen en la misma vela, cuenta el stop. El 30% más reciente del período se reporta aparte (out-of-sample) para detectar sobreajuste. Usa el apalancamiento y el % de capital como margen de tu panel (por defecto 10X con 20%: la posición vale 2× el capital).</div>`;
   grid.appendChild(card);
 
   const $b = id => document.getElementById(id);
@@ -385,7 +388,7 @@ function initUI() {
   const cls = x => x > 0 ? 'up' : x < 0 ? 'down' : '';
   const cfgUI = () => ({
     entry: $b('bt-entry').value, stopAtr: +$b('bt-stop').value, minScore: +$b('bt-score').value, be: $b('bt-be').value === '1',
-    lev: +$b('r-lev').value, riskPct: +$b('r-risk').value
+    lev: +$b('r-lev').value, frac: (+$b('r-frac').value || 20) / 100
   });
 
   async function ensure() {
@@ -428,7 +431,7 @@ function initUI() {
       await ensure();
       const r = runBacktest(data, F, cfgUI()); last = r;
       $b('bt-out').innerHTML = `<table>${head}<tbody>${row('Todo el período', r.all)}${row('In-sample (70%)', r.is)}${row('Out-of-sample (30%)', r.oos)}</tbody></table>
-        <div class="hint">Comprar y mantener en el mismo período: <b class="${cls(r.bh)}">${f2(r.bh, 1)}%</b> (sin apalancamiento). Esperanza = R promedio por trade; PF = ganancias brutas / pérdidas brutas; retorno con ${r.cfg.riskPct}% de riesgo por trade compuesto.${r.all.n ? ` Racha máxima de pérdidas: ${r.all.streak}. Duración media: ${f2(r.all.avgBars, 0)} h.` : ''}</div>${verdict(r)}`;
+        <div class="hint">Comprar y mantener en el mismo período: <b class="${cls(r.bh)}">${f2(r.bh, 1)}%</b> (sin apalancamiento). Esperanza = R promedio por trade; PF = ganancias brutas / pérdidas brutas; retorno compuesto con ${f2(r.cfg.frac * 100, 0)}% del capital como margen a ${r.cfg.lev}X (posición = ${f2(r.expo, 1)}× el capital).${r.all.n ? ` Riesgo medio al stop: ${f2(r.all.avgRisk, 1)}% del capital; peor trade: ${f2(r.all.worst, 1)}%.` : ''}${r.all.n ? ` Racha máxima de pérdidas: ${r.all.streak}. Duración media: ${f2(r.all.avgBars, 0)} h.` : ''}</div>${verdict(r)}`;
       draw(r); st('Listo.');
     } catch (e) { st('Error: ' + e.message); }
   };
@@ -463,18 +466,18 @@ function initUI() {
       if (!root.IND) throw new Error('falta el motor de indicadores (viene en index.html)');
       st('Descargando velas semanales…'); if (!wk) wk = await loadWeekly(sym);
       st('Calculando señales semanales…'); await new Promise(r => setTimeout(r, 30));
-      const r = weeklyTest(wk, { weeks: +$b('bw-weeks').value, lev: +$b('bw-lev').value, th: +$b('bw-th').value }); wlast = r;
+      const r = weeklyTest(wk, { weeks: +$b('bw-weeks').value, lev: +$b('r-lev').value, frac: (+$b('r-frac').value || 20) / 100, isolated: $b('bw-mm').value === 'iso', th: +$b('bw-th').value }); wlast = r;
       const sn = r.signalNow, snTxt = !sn ? '—' : sn.dir > 0 ? '<b class="up">LONG</b>' : sn.dir < 0 ? '<b class="down">SHORT</b>' : '<b>fuera del mercado</b>';
       const edge = r.ret > r.bh ? 'up' : 'down';
       $b('bt-out').innerHTML = `<table><thead><tr><th></th><th>Retorno</th><th>DD máx</th><th>Sharpe</th><th>Tramos</th><th>Win% tramos</th></tr></thead><tbody>
-        <tr><td>Semanal long/short ${r.cfg.lev}X</td><td class="num ${cls(r.ret)}">${f2(r.ret, 1)}%</td><td class="num down">-${f2(r.ddPct, 1)}%</td><td class="num">${f2(r.sharpe)}</td><td class="num">${r.trades}</td><td class="num">${f2(r.win, 0)}%</td></tr>
+        <tr><td>Semanal long/short · ${r.cfg.lev}X con ${f2(r.cfg.frac * 100, 0)}% del capital</td><td class="num ${cls(r.ret)}">${f2(r.ret, 1)}%</td><td class="num down">-${f2(r.ddPct, 1)}%</td><td class="num">${f2(r.sharpe)}</td><td class="num">${r.trades}</td><td class="num">${f2(r.win, 0)}%</td></tr>
         <tr><td>Comprar y mantener (1X)</td><td class="num ${cls(r.bh)}">${f2(r.bh, 1)}%</td><td colspan="4">—</td></tr></tbody></table>
         <table style="margin-top:10px"><thead><tr><th></th><th>Semanas</th><th>Promedio semanal</th><th>Retorno compuesto</th></tr></thead><tbody>
         <tr><td>Semanas long</td><td class="num">${r.long.w}</td><td class="num ${cls(r.long.avg)}">${f2(r.long.avg)}%</td><td class="num ${cls(r.long.tot)}">${f2(r.long.tot, 1)}%</td></tr>
         <tr><td>Semanas short</td><td class="num">${r.short.w}</td><td class="num ${cls(r.short.avg)}">${f2(r.short.avg)}%</td><td class="num ${cls(r.short.tot)}">${f2(r.short.tot, 1)}%</td></tr>
         ${r.flat ? `<tr><td>Fuera del mercado</td><td class="num">${r.flat}</td><td colspan="2">—</td></tr>` : ''}</tbody></table>
-        <div class="hint">Señal de la última semana cerrada (la que rige ahora): ${snTxt}${sn ? ` · puntaje ${f2(sn.sc * 100, 0)}` : ''}. ${r.weeks} semanas simuladas. Costos: comisión 0.05% por lado solo al cambiar de dirección y funding 0.01% cada 8h (se cuenta como costo en ambos lados, criterio conservador). La posición se rebalancea cada semana a exposición constante.</div>
-        ${r.liquidated ? '<div class="alert" style="color:var(--down)">✖ Con este apalancamiento la cuenta se liquidó dentro del período: el movimiento intrasemanal en contra superó el margen.</div>' : ''}
+        <div class="hint">Señal de la última semana cerrada (la que rige ahora): ${snTxt}${sn ? ` · puntaje ${f2(sn.sc * 100, 0)}` : ''}. ${r.weeks} semanas simuladas. Costos: comisión 0.05% por lado solo al cambiar de dirección y funding 0.01% cada 8h (se cuenta como costo en ambos lados, criterio conservador). La posición se rebalancea cada semana a exposición constante (margen × apalancamiento).</div>
+        ${r.liqs ? `<div class="alert" style="color:var(--down)">✖ Hubo ${r.liqs} liquidación(es) intrasemana${r.cfg.isolated ? ': en cada una perdés el margen de ese trade.' : ': la cuenta se liquidó y la simulación se detuvo.'}</div>` : ''}
         ${r.weeks < 52 ? '<div class="alert">⚠ Menos de un año de semanas: muestra demasiado chica para concluir algo.</div>' : r.ret <= 0 ? '<div class="alert" style="color:var(--down)">✖ La estrategia perdió plata en este período.</div>' : `<div class="alert" style="color:var(--${r.ret > r.bh ? 'up' : 'gold'})">${r.ret > r.bh ? '✔ Le ganó a comprar y mantener' : '⚠ Ganó plata pero rindió menos que comprar y mantener'}; ${r.long.tot > 0 && r.short.tot < 0 ? 'ojo: los shorts restaron, conviene probar solo long.' : 'validalo en otros períodos antes de arriesgar plata.'}</div>`}`;
       drawW(r); st('Listo.');
     } catch (e) { st('Error: ' + e.message); }
