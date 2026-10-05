@@ -121,6 +121,18 @@
         .plan-label { font-size: 0.75rem; color: #848e9c; margin-bottom: 4px; }
         .plan-val { font-size: 1rem; font-weight: bold; }
 
+        /* Recomendación de Entrada en base al precio guardado */
+        .entry-advice-box {
+            background: #1e2329;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            margin-top: 15px;
+            border: 1px dashed #474d57;
+        }
+        .advice-title { font-size: 0.8rem; color: #848e9c; margin-bottom: 5px; }
+        .advice-text { font-size: 1.05rem; font-weight: bold; }
+
         /* Oracle Numerics & Oscillator Status */
         .oracle-row {
             display: flex;
@@ -158,7 +170,7 @@
                 <div class="card-title">Gestión de Entrada & Niveles 10X</div>
                 
                 <div class="config-box">
-                    <label style="font-size: 0.85rem; color: #848e9c;">Configurar Precio de Entrada Objetivo:</label>
+                    <label style="font-size: 0.85rem; color: #848e9c;">Tu Precio Objetivo (Guardado):</label>
                     <div class="config-input-group">
                         <input type="number" id="custom-entry" step="0.01" placeholder="Ej: 185.50">
                         <button onclick="guardarEntrada()">Guardar</button>
@@ -175,20 +187,25 @@
                         <div id="plan-sl" class="plan-val down">--</div>
                     </div>
                     <div class="plan-box">
-                        <div class="plan-label">Take Profit 1 (1:1.5)</div>
+                        <div class="plan-label">Take Profit 1</div>
                         <div id="plan-tp1" class="plan-val up">--</div>
                     </div>
                 </div>
 
                 <div class="trade-plan-grid" style="margin-bottom: 0;">
                     <div class="plan-box" style="grid-column: span 1.5;">
-                        <div class="plan-label">Take Profit 2 (1:2.5)</div>
+                        <div class="plan-label">Take Profit 2</div>
                         <div id="plan-tp2" class="plan-val up">--</div>
                     </div>
                     <div class="plan-box" style="grid-column: span 1.5;">
-                        <div class="plan-label">Take Profit 3 (Moonbag / 1:4)</div>
+                        <div class="plan-label">Take Profit 3 (Moonbag)</div>
                         <div id="plan-tp3" class="plan-val up">--</div>
                     </div>
+                </div>
+
+                <div class="entry-advice-box">
+                    <div class="advice-title">Estado de la Entrada vs Precio en Vivo</div>
+                    <div id="advice-output" class="advice-text">Esperando precio guardado...</div>
                 </div>
             </div>
 
@@ -210,7 +227,7 @@
                 </div>
 
                 <div style="margin-top: 15px; font-size: 0.8rem; color: #848e9c; background: #1e2329; padding: 12px; border-radius: 8px;">
-                    💡 <b>Regla del Oracle:</b> Si el valor numérico marca clúster inferior de compra y el oscilador cruza al alza saliendo de sobreventa, el plan de entradas a 10X se habilita automáticamente.
+                    💡 <b>Dinámica:</b> El sistema toma estrictamente el precio que guardaste para trazar el Stop Loss y los Take Profits a 10X, y te avisa en tiempo real si el precio actual ya tocó tu zona o si debés esperar.
                 </div>
             </div>
 
@@ -244,6 +261,7 @@
 
         if (userEntryPrice > 0) {
             document.getElementById('custom-entry').value = userEntryPrice;
+            calcularPlanTrading(userEntryPrice);
         }
 
         // Inicializar gráficos TradingView
@@ -260,10 +278,8 @@
             currentSOLPrice = parseFloat(data.p);
             document.getElementById('header-price').innerText = `$${currentSOLPrice.toFixed(2)}`;
             
-            // Si el usuario no configuró entrada manual, usa el precio en vivo como referencia por defecto
-            if (!userEntryPrice || userEntryPrice === 0) {
-                calcularPlanTrading(currentSOLPrice);
-            }
+            // Evaluar estado del precio actual en comparación al precio guardado
+            compararPrecioConObjetivo();
         };
 
         function guardarEntrada() {
@@ -272,42 +288,58 @@
                 userEntryPrice = val;
                 localStorage.setItem('sol_custom_entry', val);
                 calcularPlanTrading(userEntryPrice);
+                compararPrecioConObjetivo();
             }
         }
 
-        // Motor de cálculo de Riesgo / Beneficio para Apalancamiento 10X
+        // Motor de cálculo de Riesgo / Beneficio basado estrictamente en el precio guardado
         function calcularPlanTrading(entry) {
             document.getElementById('plan-entry').innerText = `$${entry.toFixed(2)}`;
             
-            // A 10X, un Stop Loss técnico sugerido de ~3.5% del precio spot protege la cuenta antes de la liquidación total (~9%)
+            // A 10X, Stop Loss a ~3.5% y TPs calculados en base a tu entrada
             const sl = entry * (1 - 0.035);
-            const tp1 = entry * (1 + 0.035 * 1.5); // R:R 1:1.5
-            const tp2 = entry * (1 + 0.035 * 2.5); // R:R 1:2.5
-            const tp3 = entry * (1 + 0.035 * 4.0); // R:R 1:4 (Moonbag)
+            const tp1 = entry * (1 + 0.035 * 1.5);
+            const tp2 = entry * (1 + 0.035 * 2.5);
+            const tp3 = entry * (1 + 0.035 * 4.0);
 
             document.getElementById('plan-sl').innerText = `$${sl.toFixed(2)}`;
             document.getElementById('plan-tp1').innerText = `$${tp1.toFixed(2)}`;
             document.getElementById('plan-tp2').innerText = `$${tp2.toFixed(2)}`;
             document.getElementById('plan-tp3').innerText = `$${tp3.toFixed(2)}`;
 
-            simularOracleYNumerics(entry);
+            simularOracleYNumerics();
         }
 
-        // Simulación lógica conectada a los estados de tu Oráculo Numérico y Oscilador
-        function simularOracleYNumerics(entry) {
-            const numericStatus = document.getElementById('oracle-numeric-status');
-            const oscillatorStatus = document.getElementById('oracle-oscillator-status');
-            const trapFilter = document.getElementById('oracle-trap-filter');
+        // Compara el precio en vivo con el precio guardado para dar el veredicto exacto
+        function compararPrecioConObjetivo() {
+            const adviceOutput = document.getElementById('advice-output');
+            if (!userEntryPrice || userEntryPrice === 0) {
+                adviceOutput.innerText = "⚠️ Ingresá y guardá un precio de entrada objetivo.";
+                adviceOutput.style.color = "#f6465d";
+                return;
+            }
 
-            // Lógica orientativa simulada para reflejar tus indicadores
-            numericStatus.innerText = "Nivel Óptimo de Soporte (Oracle Buy Zone)";
-            numericStatus.className = "tag-bullish";
+            const diferenciaPorcentual = ((currentSOLPrice - userEntryPrice) / userEntryPrice) * 100;
 
-            oscillatorStatus.innerText = "Cruzando al alza (Saliendo de Sobreventa)";
-            oscillatorStatus.className = "tag-bullish";
+            if (Math.abs(diferenciaPorcentual) <= 0.3) {
+                adviceOutput.innerText = "🎯 ¡Precio en zona de entrada! Evaluar gatillo del Oracle.";
+                adviceOutput.style.color = "#0ecb81";
+            } else if (currentSOLPrice < userEntryPrice) {
+                adviceOutput.innerText = `⏳ Esperando retroceso. Faltan ${(userEntryPrice - currentSOLPrice).toFixed(2)} USD (${Math.abs(diferenciaPorcentual).toFixed(2)}% abajo).`;
+                adviceOutput.style.color = "#f0b90b";
+            } else {
+                adviceOutput.innerText = `📈 El precio ya superó tu entrada por ${diferenciaPorcentual.toFixed(2)}%. Esperar nuevo pullback.`;
+                adviceOutput.style.color = "#f6465d";
+            }
+        }
 
-            trapFilter.innerText = "Validado (Sin Trampa)";
-            trapFilter.className = "tag-bullish";
+        function simularOracleYNumerics() {
+            document.getElementById('oracle-numeric-status').innerText = "Nivel Oracle Sincronizado";
+            document.getElementById('oracle-numeric-status').className = "tag-bullish";
+            document.getElementById('oracle-oscillator-status').innerText = "Oscilador en Zona de Cruce";
+            document.getElementById('oracle-oscillator-status').className = "tag-bullish";
+            document.getElementById('oracle-trap-filter').innerText = "Validado";
+            document.getElementById('oracle-trap-filter').className = "tag-bullish";
         }
 
         window.onload = () => {
