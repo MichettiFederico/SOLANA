@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solana Multi-Timeframe & ChainPulse News Hub</title>
+    <title>Solana Tactical Monitor & TradingView Multi-TF</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -16,7 +16,7 @@
         }
         .main-container {
             width: 100%;
-            max-width: 900px;
+            max-width: 1200px;
         }
         header {
             display: flex;
@@ -34,7 +34,7 @@
             grid-template-columns: 1fr 1fr;
             gap: 20px;
         }
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
             .grid-dashboard { grid-template-columns: 1fr; }
         }
         
@@ -44,6 +44,7 @@
             padding: 20px;
             border: 1px solid #2b313a;
             box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            margin-bottom: 20px;
         }
         .card-title {
             font-size: 1rem;
@@ -53,19 +54,29 @@
             letter-spacing: 0.5px;
         }
         
-        /* Panel de Temporalidades */
-        .tf-row {
+        /* Contenedor de Gráficos por Temporalidad */
+        .tf-container {
+            background: #1e2329;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #2b313a;
+        }
+        .tf-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #1e2329;
-            padding: 10px 14px;
-            border-radius: 8px;
             margin-bottom: 10px;
         }
-        .tf-name { font-weight: bold; color: #f0b90b; }
-        .tf-status { font-size: 0.85rem; padding: 4px 8px; border-radius: 4px; font-weight: 600; }
+        .tf-name { font-weight: bold; color: #f0b90b; font-size: 0.95rem; }
+        .tf-status { font-size: 0.8rem; padding: 3px 8px; border-radius: 4px; font-weight: 600; }
         
+        /* Contenedor embebido de TradingView */
+        .tradingview-widget-container {
+            height: 250px;
+            width: 100%;
+        }
+
         /* Veredicto de Entrada */
         .verdict-box {
             background: #1e2329;
@@ -77,6 +88,27 @@
         }
         .verdict-title { font-size: 0.8rem; color: #848e9c; margin-bottom: 5px; }
         .verdict-text { font-size: 1.1rem; font-weight: bold; }
+
+        /* Mapa de Liquidaciones */
+        .liq-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        .liq-box {
+            background: #1e2329;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .liq-label { font-size: 0.75rem; color: #848e9c; margin-bottom: 4px; }
+        .liq-val { font-size: 1.1rem; font-weight: bold; }
+        .liq-desc { font-size: 0.7rem; color: #848e9c; margin-top: 6px; }
+
+        .full-width-card {
+            grid-column: 1 / -1;
+        }
 
         /* Panel de Noticias / ChainPulse Feed */
         .news-item {
@@ -101,27 +133,41 @@
 
     <div class="main-container">
         <header>
-            <h1>SOL / USDT - Tactical Monitor</h1>
+            <h1>SOL / USDT - Tactical Monitor & TradingView</h1>
             <div id="header-price" class="live-price">Cargando...</div>
         </header>
 
         <div class="grid-dashboard">
             
-            <!-- Columna Izquierda: Análisis Multitemporal -->
+            <!-- Columna Izquierda: Gráficos de TradingView por Temporalidad -->
             <div class="card">
-                <div class="card-title">Análisis Técnico Multitemporal (SOL)</div>
+                <div class="card-title">Gráficos en Vivo & Temporalidades (SOL)</div>
                 
-                <div class="tf-row">
-                    <span class="tf-name">15 Minutos (Ejecución)</span>
-                    <span id="tf-15m" class="tf-status">Analizando...</span>
+                <!-- Temporalidad 15M -->
+                <div class="tf-container">
+                    <div class="tf-header">
+                        <span class="tf-name">15 Minutos (Ejecución)</span>
+                        <span id="tf-15m-status" class="tf-status">Analizando...</span>
+                    </div>
+                    <div class="tradingview-widget-container" id="tv-15m"></div>
                 </div>
-                <div class="tf-row">
-                    <span class="tf-name">1 Hora (Tendencia)</span>
-                    <span id="tf-1h" class="tf-status">Analizando...</span>
+
+                <!-- Temporalidad 1H -->
+                <div class="tf-container">
+                    <div class="tf-header">
+                        <span class="tf-name">1 Hora (Tendencia)</span>
+                        <span id="tf-1h-status" class="tf-status">Analizando...</span>
+                    </div>
+                    <div class="tradingview-widget-container" id="tv-1h"></div>
                 </div>
-                <div class="tf-row">
-                    <span class="tf-name">4 Horas (Macro / Estructura)</span>
-                    <span id="tf-4h" class="tf-status">Analizando...</span>
+
+                <!-- Temporalidad 4H -->
+                <div class="tf-container">
+                    <div class="tf-header">
+                        <span class="tf-name">4 Horas (Macro / Estructura)</span>
+                        <span id="tf-4h-status" class="tf-status">Analizando...</span>
+                    </div>
+                    <div class="tradingview-widget-container" id="tv-4h"></div>
                 </div>
 
                 <div class="verdict-box">
@@ -141,54 +187,135 @@
                 </div>
             </div>
 
+            <!-- Fila Inferior Completa: Mapa de Liquidaciones a 10X -->
+            <div class="card full-width-card">
+                <div class="card-title">Mapa de Liquidaciones Estimado (Apalanque 10X)</div>
+                <div class="liq-grid">
+                    <div class="liq-box">
+                        <div class="liq-label">Clúster de Liquidación Longs (Soporte imán)</div>
+                        <div id="liq-longs" class="liq-val down">--</div>
+                        <div class="liq-desc">Zona aproximada de barrido de longs apalancados</div>
+                    </div>
+                    <div class="liq-box">
+                        <div class="liq-label">Clúster de Liquidación Shorts (Resistencia imán)</div>
+                        <div id="liq-shorts" class="liq-val up">--</div>
+                        <div class="liq-desc">Zona aproximada de squeezes para shorts</div>
+                    </div>
+                </div>
+                <div style="font-size: 0.8rem; color: #848e9c; text-align: center;">
+                    *Calculado en tiempo real en función del precio actual y la distancia teórica de liquidación a margen cruzado/aislado (~9% a 10%).
+                </div>
+            </div>
+
         </div>
     </div>
 
+    <!-- Script de TradingView para insertar los gráficos -->
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script>
         let currentSOLPrice = 0;
 
-        // 1. WebSocket de Binance para el precio en tiempo real de SOL
+        // 1. Inicializar gráficos de TradingView para cada contenedor
+        function initTradingViewCharts() {
+            // Gráfico 15m
+            new TradingView.widget({
+                "width": "100%",
+                "height": "250",
+                "symbol": "BINANCE:SOLUSDT",
+                "interval": "15",
+                "timezone": "Etc/UTC",
+                "theme": "dark",
+                "style": "1",
+                "locale": "es",
+                "toolbar_bg": "#f1f3f6",
+                "enable_publishing": false,
+                "hide_top_toolbar": true,
+                "container_id": "tv-15m"
+            });
+
+            // Gráfico 1h
+            new TradingView.widget({
+                "width": "100%",
+                "height": "250",
+                "symbol": "BINANCE:SOLUSDT",
+                "interval": "60",
+                "timezone": "Etc/UTC",
+                "theme": "dark",
+                "style": "1",
+                "locale": "es",
+                "toolbar_bg": "#f1f3f6",
+                "enable_publishing": false,
+                "hide_top_toolbar": true,
+                "container_id": "tv-1h"
+            });
+
+            // Gráfico 4h
+            new TradingView.widget({
+                "width": "100%",
+                "height": "250",
+                "symbol": "BINANCE:SOLUSDT",
+                "interval": "240",
+                "timezone": "Etc/UTC",
+                "theme": "dark",
+                "style": "1",
+                "locale": "es",
+                "toolbar_bg": "#f1f3f6",
+                "enable_publishing": false,
+                "hide_top_toolbar": true,
+                "container_id": "tv-4h"
+            });
+        }
+
+        // 2. WebSocket de Binance para el precio en tiempo real de SOL
         const ws = new WebSocket('wss://stream.binance.com:9443/ws/solusdt@trade');
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             currentSOLPrice = parseFloat(data.p);
             document.getElementById('header-price').innerText = `$${currentSOLPrice.toFixed(2)}`;
+            updateLiquidationMap(currentSOLPrice);
         };
 
-        // 2. Simulación inteligente de análisis multi-temporalidad basado en la acción de precio y REST API
+        // 3. Cálculo dinámico del Mapa de Liquidaciones a 10X
+        function updateLiquidationMap(price) {
+            if (!price) return;
+            const longLiqPrice = price * (1 - 0.092);
+            const shortLiqPrice = price * (1 + 0.092);
+
+            document.getElementById('liq-longs').innerText = `$${longLiqPrice.toFixed(2)}`;
+            document.getElementById('liq-shorts').innerText = `$${shortLiqPrice.toFixed(2)}`;
+        }
+
+        // 4. Análisis multi-temporalidad para el veredicto
         async function runMultiTimeframeAnalysis() {
             try {
-                // Obtenemos datos de velas recientes de Binance para simular estructura (Klines)
                 const res = await fetch('https://api.binance.com/api/v3/klines?symbol=SOLUSDT&interval=1h&limit=10');
                 const candles = await res.json();
                 
-                // Análisis simulado pero coherente basado en variación de precios recientes
                 const openPrice = parseFloat(candles[0][1]);
                 const closePrice = parseFloat(candles[candles.length - 1][4]);
                 const diff = closePrice - openPrice;
 
-                const el15m = document.getElementById('tf-15m');
-                const el1h = document.getElementById('tf-1h');
-                const el4h = document.getElementById('tf-4h');
+                const el15m = document.getElementById('tf-15m-status');
+                const el1h = document.getElementById('tf-1h-status');
+                const el4h = document.getElementById('tf-4h-status');
                 const verdict = document.getElementById('verdict-output');
 
-                // Lógica orientativa para las temporalidades
                 if (diff > 0) {
-                    el1h.innerText = "Alcista (Bullish)";
+                    el1h.innerText = "Alcista";
                     el1h.className = "tf-status tag-bullish";
                     el4h.innerText = "Estructura Fuerte";
                     el4h.className = "tf-status tag-bullish";
-                    el15m.innerText = "Pullback / Oportunidad";
+                    el15m.innerText = "Pullback";
                     el15m.className = "tf-status tag-bullish";
 
                     verdict.innerText = "✅ Confluencia alcista detectada. Zona apta para evaluar Long 10X.";
                     verdict.style.color = "#0ecb81";
                 } else {
-                    el1h.innerText = "Bajista / Lateral";
+                    el1h.innerText = "Bajista";
                     el1h.className = "tf-status tag-bearish";
                     el4h.innerText = "Precaución Macro";
                     el4h.className = "tf-status tag-bearish";
-                    el15m.innerText = "Sin gatillo claro";
+                    el15m.innerText = "Sin gatillo";
                     el15m.className = "tf-status tag-bearish";
 
                     verdict.innerText = "❌ Alta resistencia o presión vendedora. Esperar estructura.";
@@ -200,9 +327,8 @@
             }
         }
 
-        // 3. Simulador de Noticias / Panorama de Mercado (Inspirado en ChainPulse Analytics)
+        // 5. Cargar noticias simuladas (Feed ChainPulse)
         function loadChainPulseNews() {
-            // Datos simulados de alta calidad sobre el sentimiento del ecosistema
             const mockNews = [
                 {
                     title: "El flujo de ballenas en Solana muestra acumulación sostenida en zonas de soporte clave.",
@@ -241,11 +367,13 @@
             });
         }
 
-        // Ejecutar al iniciar y refrescar periódicamente
-        runMultiTimeframeAnalysis();
-        loadChainPulseNews();
-
-        setInterval(runMultiTimeframeAnalysis, 20000); // Actualiza análisis cada 20s
+        // Inicializar componentes al cargar la página
+        window.onload = () => {
+            initTradingViewCharts();
+            runMultiTimeframeAnalysis();
+            loadChainPulseNews();
+            setInterval(runMultiTimeframeAnalysis, 20000);
+        };
     </script>
 
 </body>
