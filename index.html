@@ -5,292 +5,290 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SOL/USDT · Panel táctico</title>
 <style>
-  :root{
-    --bg:#0b0e11; --panel:#181a20; --panel2:#1e2329; --line:#2b313a;
-    --txt:#eaecef; --mut:#848e9c; --gold:#f0b90b; --up:#0ecb81; --down:#f6465d; --warn:#f0b90b;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--txt);padding:20px;display:flex;justify-content:center}
-  .num{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
-  .wrap{width:100%;max-width:1240px}
-  header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:18px}
-  h1{font-size:1.25rem;color:var(--gold)}
-  .hdr-right{display:flex;align-items:center;gap:16px}
-  #price{font-size:1.7rem;font-weight:700}
-  #conn{font-size:.75rem;color:var(--mut)}
-  #conn.ok{color:var(--up)} #conn.bad{color:var(--down)}
-  .grid{display:grid;grid-template-columns:1.1fr 1fr;gap:18px}
-  @media(max-width:920px){.grid{grid-template-columns:1fr}}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:18px}
-  .card h2{font-size:.9rem;font-weight:600;color:var(--mut);margin-bottom:12px}
-  .full{grid-column:1/-1}
-
-  /* Veredicto */
-  .verdict{border-radius:10px;padding:16px;margin-bottom:14px;border:1px solid var(--line);background:var(--panel2)}
-  .verdict .tag{font-size:1.35rem;font-weight:800}
-  .verdict .why{font-size:.85rem;color:var(--mut);margin-top:6px;line-height:1.5}
-  .verdict.go{border-color:var(--up)} .verdict.go .tag{color:var(--up)}
-  .verdict.wait{border-color:var(--warn)} .verdict.wait .tag{color:var(--warn)}
-  .verdict.no{border-color:var(--down)} .verdict.no .tag{color:var(--down)}
-  .score{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
-  .chip{font-size:.75rem;padding:3px 8px;border-radius:20px;background:var(--bg);border:1px solid var(--line);color:var(--mut)}
-  .chip.up{color:var(--up);border-color:#0ecb8155} .chip.dn{color:var(--down);border-color:#f6465d55}
-
-  .plan{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px}
-  .box{background:var(--panel2);border-radius:8px;padding:11px;text-align:center}
-  .box .l{font-size:.72rem;color:var(--mut);margin-bottom:3px}
-  .box .v{font-size:1rem;font-weight:700}
-  .box .s{font-size:.7rem;color:var(--mut);margin-top:2px}
-  .up{color:var(--up)} .down{color:var(--down)} .gold{color:var(--gold)}
-
-  .row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-  label{display:block;font-size:.72rem;color:var(--mut);margin-bottom:3px}
-  input,select{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:7px 8px;font-size:.9rem}
-  input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
-  .hint{font-size:.75rem;color:var(--mut);margin-top:8px;line-height:1.5}
-  .alert{font-size:.8rem;color:var(--warn);margin-top:8px;line-height:1.5}
-  button,.btn{background:var(--gold);color:#111;border:0;border-radius:6px;padding:8px 12px;font-weight:700;font-size:.82rem;cursor:pointer;text-decoration:none;display:inline-block}
-  button.ghost{background:transparent;color:var(--mut);border:1px solid var(--line)}
-
-  table{width:100%;border-collapse:collapse;font-size:.82rem}
-  td,th{padding:6px 4px;text-align:right;border-bottom:1px solid var(--line)}
-  td:first-child,th:first-child{text-align:left;color:var(--mut)}
-  th{font-weight:500;color:var(--mut);font-size:.72rem}
-
-  .news{background:var(--panel2);border-left:3px solid var(--gold);border-radius:8px;padding:10px 12px;margin-bottom:8px}
-  .news a{color:var(--txt);text-decoration:none;font-size:.85rem;font-weight:600;line-height:1.35;display:block}
-  .news a:hover{color:var(--gold)}
-  .news small{color:var(--mut);font-size:.72rem}
-
-  .charts{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-  @media(max-width:920px){.charts{grid-template-columns:1fr}}
-  .tf{background:var(--panel2);border-radius:8px;padding:10px;border:1px solid var(--line)}
-  .tf b{display:block;color:var(--gold);font-size:.85rem;margin-bottom:8px}
-  .tv{height:300px}
-  .disc{font-size:.72rem;color:var(--mut);text-align:center;margin-top:6px;line-height:1.5}
-
-body{background:radial-gradient(1100px 480px at 12% -10%,#1b2433 0%,transparent 60%),#0a0d12;font-family:Inter,"Segoe UI",system-ui,sans-serif}
-.card{background:linear-gradient(180deg,#171b23,#12151b);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
-.card h2{color:#c5cbd6;font-size:.95rem;display:flex;align-items:center;gap:8px}
+:root{--bg:#0b0e11;--panel:#181a20;--panel2:#1e2329;--line:#2b313a;--txt:#eaecef;--mut:#848e9c;--gold:#f0b90b;--up:#0ecb81;--down:#f6465d}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,"Segoe UI",system-ui,sans-serif;background:radial-gradient(1100px 480px at 12% -10%,#1b2433,transparent 60%),#0a0d12;color:var(--txt);padding:20px;display:flex;justify-content:center}
+.num{font-family:ui-monospace,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+.wrap{width:100%;max-width:1240px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:18px}
+h1{font-size:1.25rem;color:var(--gold)}
+.hr{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+#price{font-size:2rem;font-weight:700}
+#conn{font-size:.75rem;color:var(--mut)}#conn.ok{color:var(--up)}#conn.bad{color:var(--down)}
+.grid{display:grid;grid-template-columns:1.1fr 1fr;gap:18px}
+@media(max-width:920px){.grid{grid-template-columns:1fr}}
+.card{background:linear-gradient(180deg,#171b23,#12151b);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:18px;box-shadow:0 10px 30px #0006}
+.card h2{font-size:.95rem;font-weight:600;color:#c5cbd6;margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .card h2:before{content:"";width:3px;height:14px;background:var(--gold);border-radius:2px}
-#price{font-size:2rem;letter-spacing:-.5px}
+.full{grid-column:1/-1}
+.verdict{border-radius:10px;padding:16px;margin-bottom:14px;border:1px solid var(--line);background:var(--panel2)}
+.verdict .tag{font-size:1.35rem;font-weight:800}.verdict .why{font-size:.85rem;color:var(--mut);margin-top:6px;line-height:1.5}
+.verdict.go{border-color:var(--up)}.verdict.go .tag{color:var(--up)}
+.verdict.wait{border-color:var(--gold)}.verdict.wait .tag{color:var(--gold)}
+.verdict.no{border-color:var(--down)}.verdict.no .tag{color:var(--down)}
+.score{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.chip{font-size:.75rem;padding:3px 8px;border-radius:20px;background:var(--bg);border:1px solid var(--line);color:var(--mut)}
+.chip.up{color:var(--up);border-color:#0ecb8155}.chip.dn{color:var(--down);border-color:#f6465d55}
+.plan{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px}
+.box{background:var(--panel2);border-radius:8px;padding:11px;text-align:center}
+.box .l{font-size:.72rem;color:var(--mut);margin-bottom:3px}.box .v{font-size:1rem;font-weight:700}.box .s{font-size:.7rem;color:var(--mut);margin-top:2px}
+.up{color:var(--up)}.down{color:var(--down)}.gold{color:var(--gold)}
+.row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+label{display:block;font-size:.72rem;color:var(--mut);margin-bottom:3px}
+input,select{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:7px 8px;font-size:.9rem}
+:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+.hint{font-size:.75rem;color:var(--mut);margin-top:8px;line-height:1.5}
+.alert{font-size:.8rem;color:var(--gold);margin-top:8px;line-height:1.5}
+button,.btn{background:var(--gold);color:#111;border:0;border-radius:6px;padding:8px 12px;font-weight:700;font-size:.82rem;cursor:pointer;text-decoration:none;display:inline-block}
+button.ghost{background:transparent;color:var(--mut);border:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+td,th{padding:6px 4px;text-align:right;border-bottom:1px solid var(--line)}
+td:first-child,th:first-child{text-align:left;color:var(--mut)}th{font-weight:500;color:var(--mut);font-size:.72rem}
 .lv{display:grid;grid-template-columns:86px 48px 62px 1fr;align-items:center;gap:8px;padding:6px 8px;margin-bottom:3px;border-radius:6px;font-size:.8rem}
-.lv.r{background:#f6465d12;border-left:3px solid var(--down)}
-.lv.s{background:#0ecb8112;border-left:3px solid var(--up)}
+.lv.r{background:#f6465d12;border-left:3px solid var(--down)}.lv.s{background:#0ecb8112;border-left:3px solid var(--up)}
 .lv.now{grid-template-columns:86px 1fr;background:#f0b90b1a;border:1px solid var(--gold);font-weight:700;margin:6px 0}
-.lv i{color:var(--gold);font-style:normal;letter-spacing:1px;font-size:.6rem}
-.lv em{font-style:normal;color:var(--mut)}
+.lv i{color:var(--gold);font-style:normal;letter-spacing:1px;font-size:.6rem}.lv em{font-style:normal;color:var(--mut)}
 .lv small{color:var(--mut);font-size:.7rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.charts{grid-template-columns:repeat(2,1fr)}
-@media(max-width:920px){.charts{grid-template-columns:1fr}}
+.charts{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}@media(max-width:920px){.charts{grid-template-columns:1fr}}
+.tf{background:var(--panel2);border-radius:8px;padding:10px;border:1px solid var(--line)}.tf b{display:block;color:var(--gold);font-size:.85rem;margin-bottom:8px}
 .tv{height:340px}
-.ig{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px}
+.ig{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px;margin-top:12px}
 .ig h3{font-size:.82rem;color:var(--gold);margin-bottom:6px}
-.ir{display:flex;justify-content:space-between;gap:8px;font-size:.78rem;padding:4px 0;border-bottom:1px solid var(--line)}
-.ir span:first-child{color:var(--mut)}
-.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-left:8px;background:#566}
-.dot.u{background:var(--up)} .dot.d{background:var(--down)}
+.ir{display:flex;justify-content:space-between;gap:8px;font-size:.78rem;padding:4px 0;border-bottom:1px solid var(--line);position:relative;cursor:help;outline:none}
+.ir span:first-child{color:var(--mut)}.ir:hover,.ir:focus{background:#ffffff08}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-left:8px;background:#566}.dot.u{background:var(--up)}.dot.d{background:var(--down)}
 .bar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:4px 0 6px}.bar i{display:block}
-.ir{position:relative;cursor:help;outline:none}
-.ir:hover,.ir:focus{background:#ffffff08}
 .tip{display:none;position:absolute;left:0;bottom:calc(100% + 6px);z-index:30;width:270px;background:#0b0e11;border:1px solid var(--gold);border-radius:8px;padding:9px 11px;font-size:.75rem;line-height:1.45;color:var(--txt);box-shadow:0 8px 24px #000c}
-.tip b{color:var(--gold)} .tip em{color:var(--mut);font-style:normal}
-.ir:hover .tip,.ir:focus .tip{display:block}
-.ig>div:last-child .tip{left:auto;right:0}
+.tip b{color:var(--gold)}.tip em{color:var(--mut);font-style:normal}.ir:hover .tip,.ir:focus .tip{display:block}.ig>div:last-child .tip{left:auto;right:0}
+.disc{font-size:.72rem;color:var(--mut);text-align:center;margin-top:6px;line-height:1.5}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1>SOL / USDT · Panel táctico</h1>
-    <div class="hdr-right">
-      <a class="btn" href="https://es.tradingview.com/chart/6YXj9fdK/" target="_blank" rel="noopener">Mi gráfico</a><span id="conn">conectando…</span>
-      <div id="price" class="num">—</div>
+<header>
+  <h1>SOL / USDT · Panel táctico</h1>
+  <div class="hr">
+    <span class="chip" id="wk">Semanal: —</span>
+    <a class="btn" href="https://es.tradingview.com/chart/6YXj9fdK/" target="_blank" rel="noopener">Mi gráfico</a>
+    <span id="conn">conectando…</span><div id="price" class="num">—</div>
+  </div>
+</header>
+<div class="grid">
+  <div>
+    <div class="card"><h2>Veredicto (long)</h2>
+      <div id="verdict" class="verdict wait"><div class="tag" id="v-tag">Calculando…</div><div class="why" id="v-why">Descargando velas de Binance.</div><div class="score" id="v-chips"></div></div>
+      <div class="plan">
+        <div class="box"><div class="l">Entrada (límite en soporte)</div><div id="p-entry" class="v num gold">—</div><div class="s" id="p-entry-s"></div></div>
+        <div class="box"><div class="l">Stop loss</div><div id="p-sl" class="v num down">—</div><div class="s" id="p-sl-s"></div></div>
+        <div class="box"><div class="l">Liquidación aprox.</div><div id="p-liq" class="v num">—</div><div class="s" id="p-liq-s"></div></div>
+      </div>
+      <div class="plan">
+        <div class="box"><div class="l">TP1 (1.5R)</div><div id="p-tp1" class="v num up">—</div><div class="s" id="p-tp1-s"></div></div>
+        <div class="box"><div class="l">TP2 (2.5R)</div><div id="p-tp2" class="v num up">—</div><div class="s" id="p-tp2-s"></div></div>
+        <div class="box"><div class="l">TP3 (4R, resto)</div><div id="p-tp3" class="v num up">—</div><div class="s" id="p-tp3-s"></div></div>
+      </div>
+      <div class="alert" id="p-alert"></div>
     </div>
-  </header>
-
-  <div class="grid">
-    <!-- IZQUIERDA: veredicto + plan -->
-    <div>
-      <div class="card">
-        <h2>Veredicto (long)</h2>
-        <div id="verdict" class="verdict wait">
-          <div class="tag" id="v-tag">Calculando…</div>
-          <div class="why" id="v-why">Descargando velas de Binance.</div>
-          <div class="score" id="v-chips"></div>
-        </div>
-
-        <div class="plan">
-          <div class="box"><div class="l">Entrada (límite en soporte)</div><div id="p-entry" class="v num gold">—</div><div class="s" id="p-entry-s"></div></div>
-          <div class="box"><div class="l">Stop loss</div><div id="p-sl" class="v num down">—</div><div class="s" id="p-sl-s"></div></div>
-          <div class="box"><div class="l">Liquidación aprox.</div><div id="p-liq" class="v num">—</div><div class="s" id="p-liq-s"></div></div>
-        </div>
-        <div class="plan">
-          <div class="box"><div class="l">TP1 (1.5R)</div><div id="p-tp1" class="v num up">—</div><div class="s" id="p-tp1-s"></div></div>
-          <div class="box"><div class="l">TP2 (2.5R)</div><div id="p-tp2" class="v num up">—</div><div class="s" id="p-tp2-s"></div></div>
-          <div class="box"><div class="l">TP3 (4R, resto)</div><div id="p-tp3" class="v num up">—</div><div class="s" id="p-tp3-s"></div></div>
-        </div>
-        <div class="alert" id="p-alert"></div>
+    <div class="card"><h2>Gestión de riesgo</h2>
+      <div class="row">
+        <div><label for="r-cap">Capital (USDT)</label><input id="r-cap" class="num" type="number" value="1000" min="1"></div>
+        <div><label for="r-risk">Riesgo por trade (%)</label><input id="r-risk" class="num" type="number" value="1" min="0.1" max="10" step="0.1"></div>
+        <div><label for="r-lev">Apalancamiento</label><select id="r-lev"><option>3</option><option>5</option><option selected>10</option><option>15</option><option>20</option></select></div>
       </div>
-
-      <div class="card">
-        <h2>Gestión de riesgo</h2>
-        <div class="row">
-          <div><label for="r-cap">Capital (USDT)</label><input id="r-cap" class="num" type="number" value="1000" min="1"></div>
-          <div><label for="r-risk">Riesgo por trade (%)</label><input id="r-risk" class="num" type="number" value="1" min="0.1" max="10" step="0.1"></div>
-          <div><label for="r-lev">Apalancamiento</label>
-            <select id="r-lev"><option>3</option><option>5</option><option selected>10</option><option>15</option><option>20</option></select></div>
-        </div>
-        <table style="margin-top:12px">
-          <tr><td>Tamaño de posición</td><td id="r-size" class="num">—</td></tr>
-          <tr><td>Margen a usar</td><td id="r-margin" class="num">—</td></tr>
-          <tr><td>Pérdida si toca el stop</td><td id="r-loss" class="num down">—</td></tr>
-          <tr><td>Ganancia si cierra 50% en TP1, 30% en TP2, 20% en TP3</td><td id="r-gain" class="num up">—</td></tr>
-        </table>
-        <div class="hint">El tamaño sale del riesgo que aceptás perder, no del apalancamiento. Con 10X y un stop de 3.5% perdés ~35% del margen en cada stop, y eso sale caro si encadenás tres seguidos.</div>
-      </div>
-    </div>
-
-    <!-- DERECHA: mercado + noticias -->
-    <div>
-      <div class="card">
-        <h2>Indicadores por temporalidad</h2>
-        <table>
-          <thead><tr><th>TF</th><th>Tendencia</th><th>RSI</th><th>vs EMA50</th><th>ATR%</th></tr></thead>
-          <tbody id="tf-body"></tbody>
-        </table>
-        <div class="hint" id="levels-note"></div>
-      </div>
-
-      <div class="card"><h2>Osciladores y volatilidad</h2><table id="ind-body"></table></div>
-      <div class="card"><h2>Mapa de soportes y resistencias</h2><div id="ladder"></div><div class="hint">Los puntos indican cuántos niveles distintos coinciden en la zona: más puntos, zona más fuerte. Incluye pivotes diarios, Fibonacci 30d, EMAs, swings, Bollinger y números redondos.</div></div>
-      <div class="card"><h2>Derivados y ánimo del mercado</h2>
-        <table>
-          <tr><td>Funding rate (8h)</td><td id="d-fund" class="num">—</td></tr>
-          <tr><td>Open interest</td><td id="d-oi" class="num">—</td></tr>
-          <tr><td>Mark vs spot</td><td id="d-basis" class="num">—</td></tr>
-          <tr><td>Miedo y codicia (crypto)</td><td id="d-fng" class="num">—</td></tr>
-        </table>
-        <div class="hint">Funding muy positivo suele indicar longs apretados y más riesgo de barrida hacia abajo.</div>
-      </div>
-
-      <div class="card"><h2>Noticias y análisis</h2><a class="btn" href="https://chainpulse.ai/?fbclid=PAdGRzdgUaVtVwZG9mAmV4dG4DYWVtAjExAHNydGMGYXBwX2lkDzU2NzA2NzM0MzM1MjQyNwABp6EeGNKGtQ-WbtqmCaUBsN3cpNKnkG_Et_OcdomTVZ1dhGpa0JbQHlg6qobb_aem_W8P4VDlib6t9GJNmrq0SNQ" target="_blank" rel="noopener">Abrir ChainPulse</a></div>
-    </div>
-
-    <div class="card full"><h2>Panel de 100 indicadores</h2><div id="ind-sum"></div><div id="ind-grid" class="ig"></div><div class="hint">Pasá el mouse (o tocá) sobre cualquier indicador para ver qué significa. Cada uno vota a favor (verde), en contra (rojo) o neutral (gris) de una compra long. Los osciladores en zona extrema votan a favor del rebote o en contra del techo.</div></div>
-    <div class="card full">
-      <h2>Gráficos (TradingView)</h2>
-      <div class="charts">
-        <div class="tf"><b>15 min · gatillo</b><div class="tv" id="tv-15m"></div></div>
-        <div class="tf"><b>1 hora · tendencia</b><div class="tv" id="tv-1h"></div></div>
-        <div class="tf"><b>4 horas · macro</b><div class="tv" id="tv-4h"></div></div>
-        <div class="tf"><b>Diario · contexto</b><div class="tv" id="tv-1d"></div></div>
-      </div>
-      <div class="hint">Los gráficos usan datos de Binance en vivo. Tu indicador Oracle Numerics sigue en tu chart de TradingView (botón "Mi gráfico").</div>
+      <table style="margin-top:12px">
+        <tr><td>Tamaño de posición</td><td id="r-size" class="num">—</td></tr>
+        <tr><td>Margen a usar</td><td id="r-margin" class="num">—</td></tr>
+        <tr><td>Pérdida si toca el stop</td><td id="r-loss" class="num down">—</td></tr>
+        <tr><td>Ganancia (50% TP1, 30% TP2, 20% TP3)</td><td id="r-gain" class="num up">—</td></tr>
+      </table>
+      <div class="hint">El tamaño sale del riesgo que aceptás perder, no del apalancamiento. Con 10X y un stop de 3.5% perdés ~35% del margen en cada stop.</div>
     </div>
   </div>
-  <div class="disc">Herramienta de apoyo, no es asesoramiento financiero. Operar futuros con apalancamiento puede hacerte perder todo el margen.</div>
+  <div>
+    <div class="card"><h2>Lectura por temporalidad</h2>
+      <table><thead><tr><th>TF</th><th>Tendencia</th><th>RSI</th><th>vs EMA50</th><th>ATR%</th><th>Puntaje</th></tr></thead><tbody id="tf-body"></tbody></table>
+      <div class="hint" id="levels-note"></div>
+    </div>
+    <div class="card"><h2>Mapa de soportes y resistencias</h2><div id="ladder"></div><div class="hint">Los puntos indican cuántos niveles coinciden en la zona: más puntos, zona más fuerte. Incluye pivotes diarios, Fibonacci 30d, EMAs, swings, Bollinger y números redondos.</div></div>
+    <div class="card"><h2>Derivados y ánimo del mercado</h2>
+      <table>
+        <tr><td>Funding rate (8h)</td><td id="d-fund" class="num">—</td></tr>
+        <tr><td>Open interest</td><td id="d-oi" class="num">—</td></tr>
+        <tr><td>Mark vs spot</td><td id="d-basis" class="num">—</td></tr>
+        <tr><td>Miedo y codicia (crypto)</td><td id="d-fng" class="num">—</td></tr>
+      </table>
+      <div class="hint">Funding muy positivo suele indicar longs apretados y más riesgo de barrida hacia abajo.</div>
+    </div>
+    <div class="card"><h2>Noticias y análisis</h2><a class="btn" href="https://chainpulse.ai/" target="_blank" rel="noopener">Abrir ChainPulse</a></div>
+  </div>
+  <div class="card full"><h2>Panel de indicadores</h2>
+    <div id="ind-sum"></div>
+    <table><thead><tr><th>TF</th><th>Alcistas</th><th>Neutrales</th><th>Bajistas</th><th>Puntaje (−100…+100)</th></tr></thead><tbody id="ind-tf"></tbody></table>
+    <div style="margin-top:12px;max-width:260px"><label for="ind-sel">Ver detalle de</label><select id="ind-sel"></select></div>
+    <div id="ind-grid" class="ig"></div>
+    <div class="hint">Cada indicador vota a favor (verde), en contra (rojo) o neutral (gris) de un long. Los osciladores en zona extrema votan por el rebote. El puntaje de cada temporalidad promedia los 5 grupos (tendencia, momentum, volatilidad, volumen, estructura), así los indicadores parecidos no inflan la convicción. Pasá el mouse (o tocá) sobre uno para ver qué mide.</div>
+  </div>
+  <div class="card full"><h2>Gráficos (TradingView)</h2>
+    <div class="charts">
+      <div class="tf"><b>15 min · gatillo</b><div class="tv" id="tv-15m"></div></div>
+      <div class="tf"><b>1 hora · tendencia</b><div class="tv" id="tv-1h"></div></div>
+      <div class="tf"><b>4 horas · macro</b><div class="tv" id="tv-4h"></div></div>
+      <div class="tf"><b>Diario · contexto</b><div class="tv" id="tv-1d"></div></div>
+      <div class="tf"><b>Semanal · sesgo long/short</b><div class="tv" id="tv-1w"></div></div>
+    </div>
+  </div>
+</div>
+<div class="disc">Herramienta de apoyo, no es asesoramiento financiero. Operar futuros con apalancamiento puede hacerte perder todo el margen.</div>
 </div>
 
 <script src="https://s3.tradingview.com/tv.js"></script>
+<!-- ===== MOTOR DE INDICADORES (compartido con backtest.js) ===== -->
+<script id="eng">
+const IND=(()=>{
+const sg=x=>x>0?1:x<0?-1:0,L=a=>a[a.length-1],S=(a,n)=>{const s=a.slice(-n);return s.reduce((x,y)=>x+y,0)/s.length};
+const f=(x,d=2)=>x==null||isNaN(x)?'—':(+x).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const ema=(v,n)=>{const k=2/(n+1);let e=v[0];return v.map((x,i)=>(e=i?x*k+e*(1-k):x))};
+const rsiA=(c,n)=>{const o=[];let g=0,l=0;for(let i=1;i<c.length;i++){const d=c[i]-c[i-1];if(i<=n){d>=0?g+=d:l-=d;if(i===n){g/=n;l/=n;o[i]=l?100-100/(1+g/l):100}}else{g=(g*(n-1)+Math.max(d,0))/n;l=(l*(n-1)+Math.max(-d,0))/n;o[i]=l?100-100/(1+g/l):100}}return o};
+const atrA=(k,n=14)=>{const o=[0];let a=null;for(let i=1;i<k.length;i++){const t=Math.max(k[i].h-k[i].l,Math.abs(k[i].h-k[i-1].c),Math.abs(k[i].l-k[i-1].c));a=a==null?t:(a*(n-1)+t)/n;o[i]=a}return o};
+const adxF=(k,n=14)=>{let tr=0,pd=0,md=0,pdi=0,mdi=0;const dx=[];for(let i=1;i<k.length;i++){const u=k[i].h-k[i-1].h,d=k[i-1].l-k[i].l,t=Math.max(k[i].h-k[i].l,Math.abs(k[i].h-k[i-1].c),Math.abs(k[i].l-k[i-1].c)),p=u>d&&u>0?u:0,m=d>u&&d>0?d:0;if(i<=n){tr+=t;pd+=p;md+=m}else{tr+=t-tr/n;pd+=p-pd/n;md+=m-md/n}if(i>=n){pdi=100*pd/tr;mdi=100*md/tr;dx.push(100*Math.abs(pdi-mdi)/((pdi+mdi)||1))}}let v=dx.slice(0,n).reduce((a,b)=>a+b,0)/n;for(let i=n;i<dx.length;i++)v=(v*(n-1)+dx[i])/n;return{adx:v,pdi,mdi}};
+const swings=(k,side=3)=>{const lows=[],highs=[];for(let i=side;i<k.length-side;i++){let a=1,b=1;for(let j=1;j<=side;j++){if(k[i].l>=k[i-j].l||k[i].l>=k[i+j].l)a=0;if(k[i].h<=k[i-j].h||k[i].h<=k[i+j].h)b=0}if(a)lows.push(k[i].l);if(b)highs.push(k[i].h)}return{lows,highs}};
+const st=(k,n,m)=>{const a=atrA(k,n);let fu=0,fl=0,d=1;for(let i=n;i<k.length;i++){const hl=(k[i].h+k[i].l)/2,u=hl+m*a[i],w=hl-m*a[i];if(i===n||u<fu||k[i-1].c>fu)fu=u;if(i===n||w>fl||k[i-1].c<fl)fl=w;d=d===1?(k[i].c<fl?-1:1):(k[i].c>fu?1:-1)}return d};
+const lr=y=>{const n=y.length,m=(n-1)/2,my=S(y,n);let u=0,e=0;y.forEach((v,i)=>{u+=(i-m)*(v-my);e+=(i-m)**2});return u/e};
+const mfm=x=>(x.h-x.l)?((x.c-x.l)-(x.h-x.c))/(x.h-x.l):0;
+const mfi=(k,q)=>{const g=k.slice(-(q+1));let P=0,N=0;g.forEach((x,i)=>{if(!i)return;const t=(x.h+x.l+x.c)/3,u=(g[i-1].h+g[i-1].l+g[i-1].c)/3;t>u?P+=t*x.v:N+=t*x.v});return 100-100/(1+P/(N||1))};
+
+function ctx(k,p){
+  const c=k.map(x=>x.c),h=k.map(x=>x.h),l=k.map(x=>x.l),n=k.length,m={};
+  const memo=(key,fn)=>key in m?m[key]:(m[key]=fn());
+  const X={k,c,n,p,
+    sma:q=>S(c,q),ema:q=>memo('e'+q,()=>ema(c,q)),E:q=>L(X.ema(q)),
+    hh:q=>Math.max(...h.slice(-q)),ll:q=>Math.min(...l.slice(-q)),
+    atr:q=>memo('a'+q,()=>atrA(k,q)),rsi:q=>memo('r'+q,()=>rsiA(c,q)),adx:()=>memo('adx',()=>adxF(k)),
+    macd:()=>memo('macd',()=>{const a=ema(c,12),b=ema(c,26),ml=a.map((x,i)=>x-b[i]),s=ema(ml,9);return{ml,hist:ml.map((x,i)=>x-s[i])}}),
+    roc:q=>(p/c[n-1-q]-1)*100,
+    obv:()=>memo('obv',()=>{let o=0;return k.map((x,i)=>i?(o+=sg(x.c-k[i-1].c)*x.v):0)}),
+    ad:()=>memo('ad',()=>{let o=0;return k.map(x=>(o+=mfm(x)*x.v))}),
+    pvt:()=>memo('pvt',()=>{let o=0;return k.map((x,i)=>i?(o+=(x.c/k[i-1].c-1)*x.v):0)})};
+  return X}
+
+const D=[],A=(g,n,min,fn,d)=>D.push({g,n,min,fn,d});
+const T='Tendencia',M='Momentum',V='Volatilidad',W='Volumen y flujo',E='Estructura';
+const GD={[T]:'Mide la dirección dominante del precio. Precio sobre sus promedios o promedios rápidos sobre lentos = alcista.',[M]:'Mide la velocidad del movimiento. En zonas extremas (sobrecompra/sobreventa) vota por el rebote en contra.',[V]:'Mide cuán estirado o comprimido está el precio. Muy extendido arriba suele corregir; muy extendido abajo suele rebotar.',[W]:'Mide si el volumen acompaña el movimiento (acumulación vs distribución).',[E]:'Mide la estructura de máximos/mínimos, retornos recientes y posición dentro del rango.','Derivados y mercado':'Datos de futuros y del mercado crypto general. Longs muy apretados o euforia suman riesgo; el miedo extremo suele marcar suelos.'};
+// Tendencia
+[10,20,50,100,200].forEach(q=>{
+  A(T,'Precio vs SMA'+q,q,X=>{const a=X.sma(q);return[f(a),sg(X.p-a)]},'Precio sobre la media simple de '+q+' velas = tendencia alcista en ese plazo.');
+  A(T,'Precio vs EMA'+q,q,X=>{const a=X.E(q);return[f(a),sg(X.p-a)]},'Precio sobre la media exponencial de '+q+' velas (pesa más lo reciente) = presión compradora.');
+});
+[[9,21],[21,55],[50,200]].forEach(([a,b])=>A(T,`EMA${a} vs EMA${b}`,b,X=>['',sg(X.E(a)-X.E(b))],'Cruce de medias: la rápida sobre la lenta indica tendencia alcista.'));
+[20,50].forEach(q=>A(T,'Pendiente EMA'+q,q+4,X=>{const e=X.ema(q);return['',sg(L(e)-e[e.length-4])]},'Si la media sube, el impulso de fondo es alcista.'));
+A(T,'Ichimoku Tenkan vs Kijun',26,X=>['',sg((X.hh(9)+X.ll(9))/2-(X.hh(26)+X.ll(26))/2)],'Tenkan (corto plazo) sobre Kijun (mediano plazo) = señal alcista.');
+A(T,'Precio vs Kijun',26,X=>{const a=(X.hh(26)+X.ll(26))/2;return[f(a),sg(X.p-a)]},'La Kijun es el punto medio de 26 velas: soporte/resistencia dinámica.');
+A(T,'Precio vs nube Ichimoku',80,X=>{const k=X.k.slice(0,-26),H=q=>Math.max(...k.slice(-q).map(x=>x.h)),Lw=q=>Math.min(...k.slice(-q).map(x=>x.l)),a=((H(9)+Lw(9))/2+(H(26)+Lw(26))/2)/2,b=(H(52)+Lw(52))/2;return['',X.p>Math.max(a,b)?1:X.p<Math.min(a,b)?-1:0]},'Precio sobre la nube = tendencia alcista; dentro = indecisión; debajo = bajista.');
+[20,55].forEach(q=>A(T,'Precio vs medio Donchian '+q,q,X=>['',sg(X.p-(X.hh(q)+X.ll(q))/2)],'Canal de máximos y mínimos: precio sobre el punto medio = sesgo alcista.'));
+A(T,'Aroon 25',25,X=>{const w=X.k.slice(-25),mx=Math.max(...w.map(x=>x.h)),mn=Math.min(...w.map(x=>x.l));return['',sg(w.findIndex(x=>x.h===mx)-w.findIndex(x=>x.l===mn))]},'Si el máximo reciente es más cercano que el mínimo, la tendencia es alcista.');
+[20,50].forEach(q=>A(T,'Regresión lineal '+q,q,X=>{const s=lr(X.c.slice(-q));return[f(s/X.p*100,3)+'%',sg(s)]},'Pendiente de la recta que mejor ajusta las últimas velas.'));
+[[10,3],[20,2]].forEach(([n,m])=>A(T,`Supertrend ${n}/${m}`,n+10,X=>['',st(X.k,n,m)],'Seguidor de tendencia basado en ATR: verde = alcista, rojo = bajista.'));
+A(T,'DI+ vs DI− (ADX>18)',35,X=>{const a=X.adx();return[f(a.adx,0),a.adx>18?sg(a.pdi-a.mdi):0]},'Dirección de la fuerza: cuenta solo cuando el ADX indica tendencia (>18).');
+// Momentum
+const rs=v=>v>70?-1:v<30?1:sg(v-50);
+[7,14,21].forEach(q=>A(M,'RSI '+q,q+2,X=>{const v=L(X.rsi(q));return[f(v,0),rs(v)]},'Sobre 70 = sobrecompra; bajo 30 = sobreventa (rebote); sobre 50 = momentum alcista.'));
+A(M,'RSI estocástico',30,X=>{const r=X.rsi(14).slice(-14),a=Math.min(...r),b=Math.max(...r),v=(L(r)-a)/((b-a)||1)*100;return[f(v,0),v<20?1:v>80?-1:0]},'Estocástico aplicado al RSI: bajo 20 = sobreventa, sobre 80 = sobrecompra.');
+[14,5].forEach(q=>A(M,'Estocástico '+q,q,X=>{const v=(X.p-X.ll(q))/((X.hh(q)-X.ll(q))||1)*100;return[f(v,0),v<20?1:v>80?-1:0]},'Ubica el precio en el rango reciente: bajo 20 = sobreventa, sobre 80 = sobrecompra.'));
+A(M,'MACD histograma',35,X=>{const h=X.macd().hist;return[f(L(h),3),sg(L(h))]},'Línea MACD menos su señal: positivo = momentum comprador.');
+A(M,'Línea MACD',35,X=>{const v=L(X.macd().ml);return[f(v,3),sg(v)]},'Distancia entre EMA12 y EMA26: sobre cero = tendencia de corto plazo alcista.');
+A(M,'MACD histograma creciente',36,X=>{const h=X.macd().hist;return['',sg(L(h)-h[h.length-2])]},'Si el histograma crece, el momentum está acelerando a favor del long.');
+[5,10,20,50].forEach(q=>A(M,'ROC '+q,q+1,X=>{const r=X.roc(q);return[f(r)+'%',sg(r)]},'Variación porcentual frente a hace '+q+' velas.'));
+[14,20].forEach(q=>A(M,'CCI '+q,q,X=>{const t=X.k.slice(-q).map(x=>(x.h+x.l+x.c)/3),mu=S(t,q),v=(L(t)-mu)/((0.015*(t.reduce((a,x)=>a+Math.abs(x-mu),0)/q))||1);return[f(v,0),v>200?-1:v<-100?1:sg(v)]},'Bajo −100 = sobrevendido (rebote posible); sobre +200 = extremo con riesgo de agotamiento.'));
+[14,28].forEach(q=>A(M,'Williams %R '+q,q,X=>{const v=-100*(X.hh(q)-X.p)/((X.hh(q)-X.ll(q))||1);return[f(v,0),v<-80?1:v>-20?-1:0]},'Bajo −80 = sobreventa; sobre −20 = sobrecompra.'));
+A(M,'Awesome Oscillator',34,X=>{const m=X.k.map(x=>(x.h+x.l)/2),v=S(m,5)-S(m,34);return[f(v,3),sg(v)]},'Diferencia entre medias de 5 y 34 períodos del punto medio de cada vela.');
+A(M,'TRIX 15',50,X=>{const t=ema(ema(ema(X.c,15),15),15);return['',sg(L(t)-t[t.length-2])]},'Cambio de una EMA triple: filtra ruido; positivo = momentum alcista.');
+// Volatilidad
+[[20,2],[50,2.5]].forEach(([q,m])=>A(V,'Bollinger %B '+q,q,X=>{const w=X.c.slice(-q),mu=S(w,q),sd=Math.sqrt(w.reduce((a,x)=>a+(x-mu)**2,0)/q),b=(X.p-(mu-m*sd))/((2*m*sd)||1)*100;return[f(b,0)+'%',b<10?1:b>90?-1:0]},'Posición dentro de las bandas: bajo 10% = pegado a la inferior (rebote); sobre 90% = estirado.'));
+[2,1.5].forEach(m=>A(V,`Keltner EMA20 ± ${m} ATR`,20,X=>{const e=X.E(20),a=L(X.atr(14));return['',X.p<e-m*a?1:X.p>e+m*a?-1:0]},'Canal basado en ATR: fuera de la banda inferior = rebote posible; de la superior = sobreextensión.'));
+A(V,'ATR% vs su promedio',60,X=>{const a=X.atr(14).slice(-50),r=L(a)/S(a,50);return[f(r,2)+'x',r>1.6?-1:0]},'Volatilidad actual contra su promedio: muy alta = más riesgo y movimientos bruscos.');
+[[20,2.5,-2],[50,3,-2.5]].forEach(([q,hi,lo])=>A(V,`Extensión vs EMA${q} (ATR)`,q,X=>{const v=(X.p-X.E(q))/L(X.atr(14));return[f(v,1),v>hi?-1:v<lo?1:0]},'Cuántos ATR se alejó el precio de su media: muy arriba corrige, muy abajo rebota.'));
+[20,50].forEach(q=>A(V,'Posición en Donchian '+q,q,X=>{const v=(X.p-X.ll(q))/((X.hh(q)-X.ll(q))||1);return[f(v*100,0)+'%',v<0.15?1:v>0.85?-1:0]},'Ubicación en el rango de '+q+' velas: pegado al piso favorece el rebote, al techo el agotamiento.'));
+// Volumen
+A(W,'OBV pendiente 20',25,X=>{const o=X.obv();return['',sg(L(o)-o[o.length-21])]},'Volumen acumulado según cada vela suba o baje: pendiente positiva = el volumen acompaña la suba.');
+A(W,'OBV vs su EMA20',25,X=>{const o=X.obv();return['',sg(L(o)-L(ema(o,20)))]},'OBV sobre su media = flujo comprador.');
+[14,7].forEach(q=>A(W,'MFI '+q,q+2,X=>{const v=mfi(X.k,q);return[f(v,0),v<20?1:v>80?-1:sg(v-50)]},'Como el RSI pero ponderado por volumen: bajo 20 = sobreventa, sobre 80 = sobrecompra.'));
+[20,50].forEach(q=>{
+  A(W,'Chaikin Money Flow '+q,q,X=>{const z=X.k.slice(-q),v=z.reduce((r,x)=>r+mfm(x)*x.v,0)/z.reduce((r,x)=>r+x.v,0);return[f(v,2),sg(v)]},'Mide si los cierres quedan cerca del máximo (acumulación) o del mínimo (distribución).');
+  A(W,'Precio vs VWAP '+q,q,X=>{const z=X.k.slice(-q),v=z.reduce((r,x)=>r+(x.h+x.l+x.c)/3*x.v,0)/z.reduce((r,x)=>r+x.v,0);return[f(v),sg(X.p-v)]},'Precio promedio ponderado por volumen: sobre el VWAP = compradores en control.');
+});
+A(W,'Precio vs VWMA 20',20,X=>{const z=X.k.slice(-20),v=z.reduce((r,x)=>r+x.c*x.v,0)/z.reduce((r,x)=>r+x.v,0);return[f(v),sg(X.p-v)]},'Media móvil ponderada por volumen.');
+A(W,'Línea A/D pendiente',25,X=>{const o=X.ad();return['',sg(L(o)-o[o.length-21])]},'Acumulación/distribución: pendiente positiva = entra dinero al activo.');
+A(W,'Force Index 13',20,X=>{const e=ema(X.k.map((x,i)=>i?(x.c-X.k[i-1].c)*x.v:0),13);return['',sg(L(e))]},'Combina cambio de precio y volumen: positivo = fuerza compradora.');
+A(W,'Volumen relativo con la vela',22,X=>{const z=X.k.slice(-21,-1),r=X.k[X.n-1].v/(z.reduce((a,x)=>a+x.v,0)/20||1),b=X.k[X.n-1];return[f(r,2)+'x',r>1?sg(b.c-b.o):0]},'Volumen alto con vela verde = la suba tiene respaldo; con vela roja = presión vendedora.');
+A(W,'PVT pendiente',25,X=>{const o=X.pvt();return['',sg(L(o)-o[o.length-21])]},'Tendencia de volumen-precio: pendiente positiva = flujo a favor.');
+// Estructura
+A(E,'Máximos y mínimos',30,X=>{const s=swings(X.k.slice(-150)),l=s.lows.slice(-2),u=s.highs.slice(-2);if(l.length<2||u.length<2)return null;const up=l[1]>l[0]&&u[1]>u[0],dw=l[1]<l[0]&&u[1]<u[0];return[up?'crecientes':dw?'decrecientes':'mixtos',up?1:dw?-1:0]},'Máximos y mínimos crecientes = tendencia alcista sana; decrecientes = bajista.');
+[1,3,5,10,20].forEach(q=>A(E,'Retorno '+q+' velas',q+1,X=>{const r=X.roc(q);return[f(r)+'%',sg(r)]},'Rendimiento acumulado reciente: positivo = impulso a favor.'));
+[20,50].forEach(q=>A(E,'Posición en rango '+q,q,X=>{const v=(X.p-X.ll(q))/((X.hh(q)-X.ll(q))||1);return[f(v*100,0)+'%',v>0.6?1:v<0.3?-1:0]},'Sobre la mitad del rango = sesgo alcista.'));
+A(E,'Distancia al máximo 50',50,X=>{const d=(X.p/X.hh(50)-1)*100;return[f(d,1)+'%',d>-8?1:d<-25?-1:0]},'Cerca del techo reciente = fortaleza; muy lejos = tendencia debilitada.');
+A(E,'Última vela',2,X=>{const b=X.k[X.n-1];return['',sg(b.c-b.o)]},'Si la última vela cerró verde (alcista) o roja (bajista).');
+A(E,'Cierre dentro de la vela',2,X=>{const b=X.k[X.n-1],v=(b.c-b.l)/((b.h-b.l)||1);return[f(v*100,0)+'%',v>0.66?1:v<0.33?-1:0]},'Cierre cerca del máximo = dominaron compradores; cerca del mínimo = vendedores.');
+A(E,'3 cierres consecutivos',5,X=>{const c=X.c,n=X.n;return['',c[n-1]>c[n-2]&&c[n-2]>c[n-3]&&c[n-3]>c[n-4]?1:c[n-1]<c[n-2]&&c[n-2]<c[n-3]&&c[n-3]<c[n-4]?-1:0]},'Tres cierres seguidos en la misma dirección marcan impulso.');
+A(E,'Cierres alcistas de las últimas 10',12,X=>{let u=0;for(let i=X.n-10;i<X.n;i++)if(X.c[i]>X.c[i-1])u++;return[u+'/10',u>=7?1:u<=3?-1:0]},'Cuántas de las últimas 10 velas cerraron arriba de la anterior.');
+
+function compute(k,tf,p){
+  const X=ctx(k,p||L(k).c),o=[];
+  for(const d of D){if(X.n<d.min+2)continue;try{const r=d.fn(X);if(r&&r[1]!=null&&!isNaN(r[1]))o.push({g:d.g,n:d.n,tf,v:r[0],s:r[1],d:d.d})}catch(e){}}
+  return o}
+// puntaje: cada grupo promedia sus votos y los grupos pesan igual -> [-1, 1]
+function score(votes){const g={};votes.forEach(x=>(g[x.g]=g[x.g]||[]).push(x.s));const m=Object.values(g).map(a=>a.reduce((x,y)=>x+y,0)/a.length);return m.length?m.reduce((x,y)=>x+y,0)/m.length:0}
+return{compute,score,sg,f,ema,atrA,rsiA,swings,GD,count:D.length}})();
+if(typeof window!=='undefined')window.IND=IND;
+</script>
+
 <script>
-const SYMBOL = 'SOLUSDT';
-const $ = id => document.getElementById(id);
-const fmt = (n, d=2) => (n==null||isNaN(n)) ? '—' : Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
-const usd = n => '$' + fmt(n);
-const pct = n => (n>=0?'+':'') + fmt(n,2) + '%';
+/* ===== PANEL ===== */
+const SYMBOL='SOLUSDT',$=id=>document.getElementById(id),fmt=IND.f,usd=n=>'$'+fmt(n),pct=n=>(n>=0?'+':'')+fmt(n,2)+'%';
+const TFS=[['15m','15 min',1],['1h','1 hora',1.5],['4h','4 horas',2],['1d','Diario',2],['1w','Semanal',1.5]];
+const TF={},ctx={price:null},L=a=>a[a.length-1];
+let ALL=[],SC={},NET=0,LASTP=0;
 
-/* ---------- Indicadores ---------- */
-function ema(v, n){ const k=2/(n+1); let e=v[0]; const out=[e]; for(let i=1;i<v.length;i++){ e=v[i]*k+e*(1-k); out.push(e);} return out; }
-function rsi(c, n=14){
-  if(c.length<n+1) return null;
-  let g=0,l=0;
-  for(let i=1;i<=n;i++){ const d=c[i]-c[i-1]; d>=0?g+=d:l-=d; }
-  g/=n; l/=n;
-  for(let i=n+1;i<c.length;i++){ const d=c[i]-c[i-1]; g=(g*(n-1)+Math.max(d,0))/n; l=(l*(n-1)+Math.max(-d,0))/n; }
-  return l===0?100:100-100/(1+g/l);
-}
-function atr(k, n=14){
-  let a=null;
-  for(let i=1;i<k.length;i++){
-    const tr=Math.max(k[i].h-k[i].l, Math.abs(k[i].h-k[i-1].c), Math.abs(k[i].l-k[i-1].c));
-    a = a==null ? tr : (a*(n-1)+tr)/n;
-  }
-  return a;
-}
-function adx(k,n=14){let tr=0,pd=0,md=0;const dx=[];
-  for(let i=1;i<k.length;i++){const u=k[i].h-k[i-1].h,d=k[i-1].l-k[i].l,t=Math.max(k[i].h-k[i].l,Math.abs(k[i].h-k[i-1].c),Math.abs(k[i].l-k[i-1].c));
-    const p=u>d&&u>0?u:0,m=d>u&&d>0?d:0;
-    if(i<=n){tr+=t;pd+=p;md+=m}else{tr+=t-tr/n;pd+=p-pd/n;md+=m-md/n}
-    if(i>=n){const a=100*pd/tr,b=100*md/tr;dx.push(100*Math.abs(a-b)/((a+b)||1))}}
-  let v=dx.slice(0,n).reduce((a,b)=>a+b,0)/n;for(let i=n;i<dx.length;i++)v=(v*(n-1)+dx[i])/n;return v}
-function swings(k, side=3){
-  const lows=[], highs=[];
-  for(let i=side;i<k.length-side;i++){
-    let isL=true,isH=true;
-    for(let j=1;j<=side;j++){
-      if(k[i].l>=k[i-j].l||k[i].l>=k[i+j].l) isL=false;
-      if(k[i].h<=k[i-j].h||k[i].h<=k[i+j].h) isH=false;
-    }
-    if(isL) lows.push(k[i].l);
-    if(isH) highs.push(k[i].h);
-  }
-  return {lows,highs};
-}
-
-/* ---------- Datos ---------- */
-const TF = { '15m':null, '1h':null, '4h':null, '1d':null };
-const ctx = { price:null, funding:null, fng:null, oi:null, mark:null };
-
-async function getKlines(interval,sym=SYMBOL){
-  const r = await fetch(`https://api.binance.com/api/v3/klines?symbol=${sym}&interval=${interval}&limit=300`);
-  if(!r.ok) throw new Error('klines '+r.status);
-  const raw = await r.json();
-  const k = raw.map(x=>({t:x[0],o:+x[1],h:+x[2],l:+x[3],c:+x[4],v:+x[5]}));
-  const closes = k.slice(0,-1).map(x=>x.c); // solo velas cerradas
-  const closed = k.slice(0,-1);
-  const e20=ema(closes,20), e50=ema(closes,50), e200=ema(closes,200);
-  const last = closes.length-1;
-  const e12=ema(closes,12),e26=ema(closes,26),ml=e12.map((x,i)=>x-e26[i]),sg=ema(ml,9);
-  const w=closed.slice(-20),m=w.reduce((a,x)=>a+x.c,0)/20,sd=Math.sqrt(w.reduce((a,x)=>a+(x.c-m)**2,0)/20);
-  const h14=Math.max(...closed.slice(-14).map(x=>x.h)),l14=Math.min(...closed.slice(-14).map(x=>x.l));
-  const vAvg=closed.slice(-21,-1).reduce((a,x)=>a+x.v,0)/20;
-  return {
-    k:closed, close:closes[last],
-    ema20:e20[last], ema50:e50[last], ema200:e200[last],
-    rsi:rsi(closes), atr:atr(closed), sw:swings(closed.slice(-150)),
-    hist:ml[last]-sg[last], bbU:m+2*sd, bbL:m-2*sd, stoch:(closes[last]-l14)/((h14-l14)||1)*100,
-    vol:closed[last].v/vAvg, adx:adx(closed)
-  };
-}
+async function getK(iv,sym=SYMBOL){
+  const r=await fetch(`https://api.binance.com/api/v3/klines?symbol=${sym}&interval=${iv}&limit=1000`);
+  if(!r.ok)throw new Error(iv+' '+r.status);
+  const k=(await r.json()).slice(0,-1).map(x=>({t:x[0],o:+x[1],h:+x[2],l:+x[3],c:+x[4],v:+x[5]}));
+  const c=k.map(x=>x.c),w=c.slice(-20),m=w.reduce((a,x)=>a+x,0)/20,sd=Math.sqrt(w.reduce((a,x)=>a+(x-m)**2,0)/20);
+  const e12=IND.ema(c,12),e26=IND.ema(c,26),ml=e12.map((x,i)=>x-e26[i]),sg=IND.ema(ml,9);
+  return{k,close:L(c),ema20:L(IND.ema(c,20)),ema50:L(IND.ema(c,50)),ema200:L(IND.ema(c,200)),rsi:L(IND.rsiA(c,14)),atr:L(IND.atrA(k,14)),
+    hist:L(ml)-L(sg),bbU:m+2*sd,bbL:m-2*sd,sw:IND.swings(k.slice(-150))}}
 
 async function loadAll(){
-  try{
-    const [a,b,c,d] = await Promise.all([getKlines('15m'),getKlines('1h'),getKlines('4h'),getKlines('1d')]);
-    TF['15m']=a; TF['1h']=b; TF['4h']=c; TF['1d']=d;
-  }catch(e){ $('v-why').textContent='No pude descargar velas de Binance ('+e.message+'). Revisá la conexión o si Binance está bloqueado en tu red.'; }
+  try{const r=await Promise.all(TFS.map(([k])=>getK(k)));TFS.forEach(([k],i)=>TF[k]=r[i])}
+  catch(e){$('v-why').textContent='No pude descargar velas de Binance ('+e.message+'). Revisá la conexión o si Binance está bloqueado en tu red.'}
+  const J=async u=>{try{return await(await fetch(u)).json()}catch(e){return null}};
+  const pi=await J('https://fapi.binance.com/fapi/v1/premiumIndex?symbol='+SYMBOL);if(pi){ctx.funding=+pi.lastFundingRate;ctx.mark=+pi.markPrice}
+  const oi=await J('https://fapi.binance.com/fapi/v1/openInterest?symbol='+SYMBOL);if(oi)ctx.oi=+oi.openInterest;
+  const fg=await J('https://api.alternative.me/fng/?limit=1');if(fg&&fg.data)ctx.fng=fg.data[0];
+  const q='?symbol='+SYMBOL+'&period=1h&limit=',B='https://fapi.binance.com/futures/data/';
+  const ls=await J(B+'globalLongShortAccountRatio'+q+'1');if(ls&&ls[0])ctx.ls=+ls[0].longShortRatio;
+  const tk=await J(B+'takerlongshortRatio'+q+'1');if(tk&&tk[0])ctx.taker=+tk[0].buySellRatio;
+  const oh=await J(B+'openInterestHist'+q+'24');if(oh&&oh.length>1)ctx.oiChg=(+oh[oh.length-1].sumOpenInterest/+oh[0].sumOpenInterest-1)*100;
+  try{ctx.b4=await getK('4h','BTCUSDT');ctx.bd=await getK('1d','BTCUSDT');ctx.e4=await getK('4h','ETHUSDT')}catch(e){}
+  LASTP=0;render()}
 
-  try{
-    const r = await fetch(`https://fapi.binance.com/fapi/v1/premiumIndex?symbol=${SYMBOL}`);
-    const j = await r.json(); ctx.funding=+j.lastFundingRate; ctx.mark=+j.markPrice;
-  }catch(e){}
-  try{
-    const r = await fetch(`https://fapi.binance.com/fapi/v1/openInterest?symbol=${SYMBOL}`);
-    const j = await r.json(); ctx.oi=+j.openInterest;
-  }catch(e){}
-  try{
-    const r = await fetch('https://api.alternative.me/fng/?limit=1');
-    const j = await r.json(); ctx.fng=j.data[0];
-  }catch(e){}
-  const fj=async u=>{try{return await (await fetch('https://fapi.binance.com/futures/data/'+u)).json()}catch(e){return null}};
-  const q='?symbol='+SYMBOL+'&period=1h&limit=';
-  const ls=await fj('globalLongShortAccountRatio'+q+'1'); if(ls&&ls[0]) ctx.ls=+ls[0].longShortRatio;
-  const tk=await fj('takerlongshortRatio'+q+'1'); if(tk&&tk[0]) ctx.taker=+tk[0].buySellRatio;
-  const oh=await fj('openInterestHist'+q+'24'); if(oh&&oh.length>1) ctx.oiChg=(+oh[oh.length-1].sumOpenInterest/+oh[0].sumOpenInterest-1)*100;
-  try{ ctx.b4=await getKlines('4h','BTCUSDT'); ctx.bd=await getKlines('1d','BTCUSDT'); ctx.e4=await getKlines('4h','ETHUSDT'); }catch(e){}
-  render();
-}
+function extraVotes(p){
+  const o=[],g='Derivados y mercado',a=(n,v,s,d)=>o.push({g,n,tf:'mkt',v,s,d:d||IND.GD[g]}),sg=IND.sg;
+  if(ctx.funding!=null)a('Funding rate',fmt(ctx.funding*100,4)+'%',ctx.funding>0.0005?-1:ctx.funding<0?1:0,'Tasa que pagan los longs a los shorts. Muy positiva = demasiados longs (riesgo de barrida); negativa = favorable al long.');
+  if(ctx.mark)a('Base mark vs spot',pct((ctx.mark/p-1)*100),ctx.mark/p>1.002?-1:ctx.mark<p?1:0,'Prima de futuros sobre el spot: alta = euforia apalancada.');
+  if(ctx.fng)a('Miedo y codicia',ctx.fng.value,ctx.fng.value<25?1:ctx.fng.value>75?-1:0,'Índice de ánimo: el miedo extremo suele marcar suelos; la codicia extrema, techos.');
+  if(ctx.ls!=null)a('Ratio long/short (cuentas)',fmt(ctx.ls,2),ctx.ls>1.8?-1:ctx.ls<1?1:0,'Con demasiados longs el mercado queda vulnerable a una caída.');
+  if(ctx.taker!=null)a('Taker compra/venta 1h',fmt(ctx.taker,2),sg(ctx.taker-1),'Compras contra ventas agresivas: mayor a 1 = predominan compradores.');
+  if(ctx.oiChg!=null&&TF['1h']){const c=TF['1h'].k,pc=(p/c[c.length-25].c-1)*100;a('OI 24h vs precio',pct(ctx.oiChg),ctx.oiChg>0?(pc>0?1:-1):0,'Interés abierto contra precio: sube con precio en alza = dinero nuevo a favor; con precio a la baja = presión vendedora.')}
+  if(ctx.b4)a('BTC vs EMA50 4h','',sg(ctx.b4.close-ctx.b4.ema50),'SOL suele moverse con Bitcoin: si BTC está fuerte, mejora la probabilidad del long.');
+  if(ctx.bd){a('BTC vs EMA200 diario','',sg(ctx.bd.close-ctx.bd.ema200));const R=ctx.bd.rsi;a('BTC RSI 14 diario',fmt(R,0),R>75?-1:R<30?1:sg(R-50));const c=ctx.bd.k;a('BTC retorno 7 días',fmt((ctx.bd.close/c[c.length-8].c-1)*100)+'%',sg(ctx.bd.close/c[c.length-8].c-1));a('BTC MACD histograma diario',fmt(ctx.bd.hist,2),sg(ctx.bd.hist))}
+  if(ctx.e4)a('ETH vs EMA50 4h','',sg(ctx.e4.close-ctx.e4.ema50));
+  return o}
 
+function computeAll(p){
+  ALL=[];SC={};
+  TFS.forEach(([k])=>{const t=TF[k];if(!t)return;const v=IND.compute(t.k,k,p);SC[k]=IND.score(v);ALL.push(...v)});
+  const ex=extraVotes(p);ALL.push(...ex);SC.mkt=IND.score(ex);
+  let w=0,s=0;TFS.forEach(([k,,wt])=>{if(SC[k]!=null){s+=SC[k]*wt;w+=wt}});NET=w?s/w*100:0;LASTP=p}
 
 function buildLevels(p){
   const raw=[],add=(v,l)=>{if(v>0&&isFinite(v))raw.push({p:v,l})},d=TF['1d'];
@@ -304,339 +302,97 @@ function buildLevels(p){
     add(t.bbU,'BB sup '+n);add(t.bbL,'BB inf '+n)});
   const st=p>=100?5:1,b=Math.round(p/st)*st;[-2,-1,0,1,2].forEach(i=>add(b+i*st,'Nivel redondo'));
   raw.sort((a,b)=>a.p-b.p);const out=[];
-  raw.forEach(x=>{const c=out[out.length-1];
-    if(c&&(x.p-c.p)/c.p<0.004){c.p=(c.p*c.n+x.p)/(c.n+1);c.n++;c.ls.push(x.l)}else out.push({p:x.p,n:1,ls:[x.l]})});
+  raw.forEach(x=>{const c=out[out.length-1];if(c&&(x.p-c.p)/c.p<0.004){c.p=(c.p*c.n+x.p)/(c.n+1);c.n++;c.ls.push(x.l)}else out.push({p:x.p,n:1,ls:[x.l]})});
   out.forEach(c=>c.l=[...new Set(c.ls)].slice(0,3).join(' · '));return out}
 
-function renderSide(p){
-  if(!p||!TF['1d'])return;
-  const T=['15m','1h','4h','1d'];
-  const row=(n,f,cl)=>'<tr title="'+tipText(n)+'"><td>'+n+'</td>'+T.map(x=>{const t=TF[x];return t?'<td class="num '+(cl?cl(t):'')+'">'+f(t)+'</td>':'<td>—</td>'}).join('')+'</tr>';
-  $('ind-body').innerHTML='<thead><tr><th></th>'+T.map(x=>'<th>'+x+'</th>').join('')+'</tr></thead>'+
-    row('RSI 14',t=>fmt(t.rsi,0),t=>t.rsi>70?'down':t.rsi<30?'up':'')+
-    row('Estocástico',t=>fmt(t.stoch,0),t=>t.stoch>80?'down':t.stoch<20?'up':'')+
-    row('MACD hist.',t=>fmt(t.hist,3),t=>t.hist>0?'up':'down')+
-    row('ADX (fuerza)',t=>fmt(t.adx,0),t=>t.adx>25?'gold':'')+
-    row('Bollinger %B',t=>fmt((p-t.bbL)/(t.bbU-t.bbL)*100,0)+'%',t=>p>t.bbU?'down':p<t.bbL?'up':'')+
-    row('Volumen vs prom.',t=>fmt(t.vol,2)+'x',t=>t.vol>1.5?'gold':'')+
-    row('EMA200',t=>fmt(t.ema200),t=>p>t.ema200?'up':'down');
-  const L=buildLevels(p),R=L.filter(x=>x.p>p).sort((a,b)=>a.p-b.p).slice(0,6).reverse(),S=L.filter(x=>x.p<=p).sort((a,b)=>b.p-a.p).slice(0,6);
-  const li=(x,k)=>`<div class="lv ${k}"><span class="num">${usd(x.p)}</span><i>${'●'.repeat(Math.min(x.n,5))}</i><em class="num">${pct((x.p/p-1)*100)}</em><small>${x.l}</small></div>`;
-  $('ladder').innerHTML=R.map(x=>li(x,'r')).join('')+`<div class="lv now"><span class="num">${usd(p)}</span><small>precio actual</small></div>`+S.map(x=>li(x,'s')).join('')}
-
-function buildIndicators(p){
-  const o=[],a=(g,n,v,s)=>o.push({g,n,v:v==null?'':v,s}),h=TF['1h'],f=TF['4h'],d=TF['1d'];
-  if(!h||!f||!d)return o;
-  const L=x=>x[x.length-1],cl=t=>t.k.map(x=>x.c),S=(c,n)=>c.slice(-n).reduce((x,y)=>x+y,0)/n,sg=x=>x>0?1:x<0?-1:0;
-  const c1=cl(h),c4=cl(f),cd=cl(d),fx=fmt,roc=(c,n)=>(L(c)/c[c.length-1-n]-1)*100;
-  const hh=(k,n)=>Math.max(...k.slice(-n).map(x=>x.h)),ll=(k,n)=>Math.min(...k.slice(-n).map(x=>x.l));
-  const T='Tendencia',M='Momentum',V='Volatilidad',W='Volumen y flujo',E='Estructura',X='Derivados y mercado';
-  // Tendencia
-  [['SMA20 1h',S(c1,20)],['SMA50 1h',S(c1,50)],['SMA100 4h',S(c4,100)],['SMA200 diario',S(cd,200)]].forEach(([n,v])=>a(T,'Precio vs '+n,usd(v),sg(p-v)));
-  a(T,'EMA9 vs EMA21 1h','',sg(L(ema(c1,9))-L(ema(c1,21))));
-  a(T,'EMA21 vs EMA55 4h','',sg(L(ema(c4,21))-L(ema(c4,55))));
-  a(T,'EMA50 vs EMA200 4h','',sg(f.ema50-f.ema200));
-  a(T,'EMA50 vs EMA200 diario','',sg(d.ema50-d.ema200));
-  const e20=ema(c1,20),e5=ema(c4,50);
-  a(T,'Pendiente EMA20 1h','',sg(L(e20)-e20[e20.length-4]));
-  a(T,'Pendiente EMA50 4h','',sg(L(e5)-e5[e5.length-4]));
-  const tk=(hh(f.k,9)+ll(f.k,9))/2,kj=(hh(f.k,26)+ll(f.k,26))/2;
-  a(T,'Ichimoku Tenkan vs Kijun 4h','',sg(tk-kj)); a(T,'Precio vs Kijun 4h',usd(kj),sg(p-kj));
-  const lr=(c,n)=>{const y=c.slice(-n),m=(n-1)/2,my=S(y,n);let u=0,e=0;y.forEach((v,i)=>{u+=(i-m)*(v-my);e+=(i-m)**2});return u/e};
-  a(T,'Regresión lineal 20 velas 1h',fx(lr(c1,20),3),sg(lr(c1,20)));
-  const w=h.k.slice(-25);a(T,'Aroon 25 1h','',sg(w.findIndex(x=>x.h===Math.max(...w.map(y=>y.h)))-w.findIndex(x=>x.l===Math.min(...w.map(y=>y.l)))));
-  a(T,'Precio vs medio Donchian 20 1h','',sg(p-(hh(h.k,20)+ll(h.k,20))/2));
-  // Momentum
-  [['RSI 14 1h',h.rsi],['RSI 14 4h',f.rsi],['RSI 14 diario',d.rsi]].forEach(([n,v])=>a(M,n,fx(v,0),v>70?-1:v<30?1:sg(v-50)));
-  a(M,'MACD histograma 1h',fx(h.hist,3),sg(h.hist)); a(M,'MACD histograma diario',fx(d.hist,3),sg(d.hist));
-  a(M,'Línea MACD 4h','',sg(L(ema(c4,12))-L(ema(c4,26))));
-  [['ROC 12 1h',c1,12],['ROC 24 4h',c4,24],['ROC 12 diario',cd,12]].forEach(([n,c,k])=>a(M,n,fx(roc(c,k))+'%',sg(roc(c,k))));
-  const tp=h.k.slice(-20).map(x=>(x.h+x.l+x.c)/3),mt=S(tp,20),cci=(L(tp)-mt)/(0.015*(tp.reduce((x,y)=>x+Math.abs(y-mt),0)/20));
-  a(M,'CCI 20 1h',fx(cci,0),cci>200?-1:cci<-100?1:sg(cci));
-  const wr=-100*(hh(h.k,14)-p)/((hh(h.k,14)-ll(h.k,14))||1);a(M,'Williams %R 14 1h',fx(wr,0),wr<-80?1:wr>-20?-1:0);
-  a(M,'Estocástico 14 1h',fx(h.stoch,0),h.stoch<20?1:h.stoch>80?-1:0); a(M,'Estocástico 14 4h',fx(f.stoch,0),f.stoch<20?1:f.stoch>80?-1:0);
-  const md=h.k.map(x=>(x.h+x.l)/2),ao=S(md,5)-S(md,34);a(M,'Awesome Oscillator 1h',fx(ao,3),sg(ao));
-  // Volatilidad
-  [['1h',h],['4h',f]].forEach(([n,t])=>{const b=(p-t.bbL)/(t.bbU-t.bbL)*100;a(V,'Bollinger %B '+n,fx(b,0)+'%',b<10?1:b>90?-1:0)});
-  a(V,'Precio vs media Bollinger 4h','',sg(p-(f.bbU+f.bbL)/2));
-  a(V,'Keltner 1h (EMA20 ± 2 ATR)','',p<L(e20)-2*h.atr?1:p>L(e20)+2*h.atr?-1:0);
-  const ap=d.atr/p*100;a(V,'ATR diario %',fx(ap,1)+'%',ap<5?1:ap>8?-1:0);
-  const bw=(f.bbU-f.bbL)/((f.bbU+f.bbL)/2)*100;a(V,'Ancho Bollinger 4h',fx(bw,1)+'%',bw>12?-1:0);
-  const ex=(p-L(e20))/h.atr;a(V,'Extensión vs EMA20 (ATR)',fx(ex,1),ex>2.5?-1:ex<-2?1:0);
-  // Volumen y flujo
-  let ob=0;const obs=h.k.map((x,i)=>i?(ob+=sg(x.c-h.k[i-1].c)*x.v):0);a(W,'OBV pendiente 1h','',sg(L(obs)-obs[obs.length-21]));
-  const q=h.k.slice(-15);let pf=0,nf=0;q.forEach((x,i)=>{if(!i)return;const t=(x.h+x.l+x.c)/3,u=(q[i-1].h+q[i-1].l+q[i-1].c)/3;t>u?pf+=t*x.v:nf+=t*x.v});
-  const mfi=100-100/(1+pf/(nf||1));a(W,'MFI 14 1h',fx(mfi,0),mfi<20?1:mfi>80?-1:sg(mfi-50));
-  const z=h.k.slice(-20),mf=x=>(x.h-x.l)?((x.c-x.l)-(x.h-x.c))/(x.h-x.l):0,cmf=z.reduce((r,x)=>r+mf(x)*x.v,0)/z.reduce((r,x)=>r+x.v,0);
-  a(W,'Chaikin Money Flow 20 1h',fx(cmf,2),sg(cmf));
-  const lk=L(h.k);a(W,'Volumen relativo con vela 1h',fx(h.vol,2)+'x',h.vol>1?sg(lk.c-lk.o):0);
-  const v24=h.k.slice(-24),vw=v24.reduce((r,x)=>r+(x.h+x.l+x.c)/3*x.v,0)/v24.reduce((r,x)=>r+x.v,0);a(W,'Precio vs VWAP 24h',usd(vw),sg(p-vw));
-  let ad=0;const ads=h.k.map(x=>(ad+=mf(x)*x.v));a(W,'Línea A/D pendiente 1h','',sg(L(ads)-ads[ads.length-21]));
-  const fi=ema(h.k.map((x,i)=>i?(x.c-h.k[i-1].c)*x.v:0),13);a(W,'Force Index 13 1h','',sg(L(fi)));
-  const y=L(d.k);a(W,'Cierre diario en mitad alta','',sg((y.c-y.l)/((y.h-y.l)||1)-0.5));
-  // Estructura
-  [['1h',h],['4h',f]].forEach(([n,t])=>{const l=t.sw.lows.slice(-2),u=t.sw.highs.slice(-2);a(E,'Máximos y mínimos '+n,l[1]>l[0]&&u[1]>u[0]?'crecientes':l[1]<l[0]&&u[1]<u[0]?'decrecientes':'mixtos',l[1]>l[0]&&u[1]>u[0]?1:l[1]<l[0]&&u[1]<u[0]?-1:0)});
-  const dm=(p/hh(d.k,30)-1)*100;a(E,'Distancia al máximo 30d',fx(dm,1)+'%',dm>-8?1:dm<-25?-1:0);
-  a(E,'Vela diaria de ayer','',sg(y.c-y.o));
-  a(E,'Retorno 7 días',fx(roc(cd,7))+'%',sg(roc(cd,7))); a(E,'Retorno 30 días',fx(roc(cd,30))+'%',sg(roc(cd,30)));
-  // Derivados y mercado
-  if(ctx.funding!=null)a(X,'Funding rate',fx(ctx.funding*100,4)+'%',ctx.funding>0.0005?-1:ctx.funding<0?1:0);
-  if(ctx.mark)a(X,'Base mark vs spot',pct((ctx.mark/p-1)*100),ctx.mark/p>1.002?-1:ctx.mark<p?1:0);
-  if(ctx.fng)a(X,'Miedo y codicia',ctx.fng.value,ctx.fng.value<25?1:ctx.fng.value>75?-1:0);
-  if(ctx.ls!=null)a(X,'Ratio long/short (cuentas)',fx(ctx.ls,2),ctx.ls>1.8?-1:ctx.ls<1?1:0);
-  if(ctx.taker!=null)a(X,'Taker compra/venta 1h',fx(ctx.taker,2),sg(ctx.taker-1));
-  if(ctx.oiChg!=null){const pc=roc(c1,24);a(X,'OI 24h vs precio',pct(ctx.oiChg),ctx.oiChg>0?(pc>0?1:-1):0)}
-  if(ctx.b4)a(X,'BTC vs EMA50 4h','',sg(ctx.b4.close-ctx.b4.ema50));
-  if(ctx.bd)a(X,'BTC vs EMA200 diario','',sg(ctx.bd.close-ctx.bd.ema200));
-
-  // ---- ampliación a 100
-  const e2h=ema(c1,200),e504=ema(c4,50),ed=ema(cd,200);
-  a(T,'Precio vs EMA200 1h',usd(L(e2h)),sg(p-L(e2h)));
-  a(T,'Precio vs EMA50 4h',usd(L(e504)),sg(p-L(e504)));
-  a(T,'Precio vs EMA20 diario',usd(d.ema20),sg(p-d.ema20));
-  a(T,'EMA9 vs EMA21 4h','',sg(L(ema(c4,9))-L(ema(c4,21))));
-  a(T,'Pendiente EMA200 diario','',sg(L(ed)-ed[ed.length-6]));
-  const kjd=(hh(d.k,26)+ll(d.k,26))/2,tkd=(hh(d.k,9)+ll(d.k,9))/2;
-  a(T,'Precio vs Kijun diario',usd(kjd),sg(p-kjd)); a(T,'Tenkan vs Kijun diario','',sg(tkd-kjd));
-  a(T,'Regresión lineal 20 velas diario','',sg(lr(cd,20)));
-  const w4=f.k.slice(-25);a(T,'Aroon 25 4h','',sg(w4.findIndex(x=>x.h===Math.max(...w4.map(y=>y.h)))-w4.findIndex(x=>x.l===Math.min(...w4.map(y=>y.l)))));
-  a(T,'Precio vs medio Donchian 20 4h','',sg(p-(hh(f.k,20)+ll(f.k,20))/2));
-  const ccF=k=>{const t=k.slice(-20).map(x=>(x.h+x.l+x.c)/3),m=S(t,20);return (L(t)-m)/(0.015*(t.reduce((r,x)=>r+Math.abs(x-m),0)/20))};
-  const aoF=k=>{const m=k.map(x=>(x.h+x.l)/2);return S(m,5)-S(m,34)};
-  const mcL=c=>L(ema(c,12))-L(ema(c,26)),rs=v=>v>70?-1:v<30?1:sg(v-50);
-  a(M,'RSI 7 1h',fx(rsi(c1,7),0),rs(rsi(c1,7)));
-  const t15=TF['15m'];if(t15){a(M,'RSI 14 15m',fx(t15.rsi,0),rs(t15.rsi));a(M,'Estocástico 14 15m',fx(t15.stoch,0),t15.stoch<20?1:t15.stoch>80?-1:0);a(M,'MACD histograma 15m',fx(t15.hist,3),sg(t15.hist))}
-  a(M,'MACD histograma 4h',fx(f.hist,3),sg(f.hist));
-  a(M,'Línea MACD 1h','',sg(mcL(c1)));a(M,'Línea MACD diario','',sg(mcL(cd)));
-  const c4c=ccF(f.k);a(M,'CCI 20 4h',fx(c4c,0),c4c>200?-1:c4c<-100?1:sg(c4c));
-  const w4r=-100*(hh(f.k,14)-p)/((hh(f.k,14)-ll(f.k,14))||1);a(M,'Williams %R 14 4h',fx(w4r,0),w4r<-80?1:w4r>-20?-1:0);
-  a(M,'Awesome Oscillator 4h',fx(aoF(f.k),3),sg(aoF(f.k)));
-  a(V,'Keltner 4h (EMA20 ± 2 ATR)','',p<L(ema(c4,20))-2*f.atr?1:p>L(ema(c4,20))+2*f.atr?-1:0);
-  const ap1=h.atr/p*100;a(V,'ATR 1h %',fx(ap1,2)+'%',ap1>1.5?-1:0);
-  const bw1=(h.bbU-h.bbL)/((h.bbU+h.bbL)/2)*100;a(V,'Ancho Bollinger 1h',fx(bw1,1)+'%',bw1>8?-1:0);
-  const rg=(y.h-y.l)/d.atr;a(V,'Rango de ayer vs ATR diario',fx(rg,2)+'x',rg>1.6?-1:0);
-  const ex4=(p-L(e504))/f.atr;a(V,'Extensión vs EMA50 4h (ATR)',fx(ex4,1),ex4>3?-1:ex4<-2.5?1:0);
-  const bpd=(p-d.bbL)/(d.bbU-d.bbL)*100;a(V,'Bollinger %B diario',fx(bpd,0)+'%',bpd<10?1:bpd>90?-1:0);
-  const obvS=k=>{let q2=0;const z2=k.map((x,i)=>i?(q2+=sg(x.c-k[i-1].c)*x.v):0);return sg(L(z2)-z2[z2.length-21])};
-  a(W,'OBV pendiente 4h','',obvS(f.k));
-  const mfiF=k=>{const g=k.slice(-15);let P=0,N=0;g.forEach((x,i)=>{if(!i)return;const t=(x.h+x.l+x.c)/3,u=(g[i-1].h+g[i-1].l+g[i-1].c)/3;t>u?P+=t*x.v:N+=t*x.v});return 100-100/(1+P/(N||1))};
-  const mf4=mfiF(f.k);a(W,'MFI 14 4h',fx(mf4,0),mf4<20?1:mf4>80?-1:sg(mf4-50));
-  const z4=f.k.slice(-20),cm4=z4.reduce((r,x)=>r+mf(x)*x.v,0)/z4.reduce((r,x)=>r+x.v,0);a(W,'Chaikin Money Flow 20 4h',fx(cm4,2),sg(cm4));
-  a(W,'Volumen relativo con vela diaria',fx(d.vol,2)+'x',d.vol>1?sg(y.c-y.o):0);
-  const v7=h.k.slice(-168),vw7=v7.reduce((r,x)=>r+(x.h+x.l+x.c)/3*x.v,0)/v7.reduce((r,x)=>r+x.v,0);a(W,'Precio vs VWAP 7d',usd(vw7),sg(p-vw7));
-  const f4=ema(f.k.map((x,i)=>i?(x.c-f.k[i-1].c)*x.v:0),13);a(W,'Force Index 13 4h','',sg(L(f4)));
-  const mn=ll(d.k,30),mx7=hh(d.k,7),dn=(p/mn-1)*100,d7=(p/mx7-1)*100;
-  a(E,'Distancia al mínimo 30d',fx(dn,1)+'%',dn>15?1:dn<4?-1:0);
-  a(E,'Distancia al máximo 7d',fx(d7,1)+'%',d7>-3?1:d7<-12?-1:0);
-  {const l=d.sw.lows.slice(-2),u=d.sw.highs.slice(-2),up=l[1]>l[0]&&u[1]>u[0],dw=l[1]<l[0]&&u[1]<u[0];a(E,'Máximos y mínimos diario',up?'crecientes':dw?'decrecientes':'mixtos',up?1:dw?-1:0)}
-  a(E,'Retorno 24 horas',fx(roc(c1,24))+'%',sg(roc(c1,24)));a(E,'Retorno 3 días',fx(roc(cd,3))+'%',sg(roc(cd,3)));
-  const pr=(p-mn)/((hh(d.k,30)-mn)||1);a(E,'Posición en rango 30d',fx(pr*100,0)+'%',pr>0.6?1:pr<0.3?-1:0);
-  if(ctx.e4)a(X,'ETH vs EMA50 4h','',sg(ctx.e4.close-ctx.e4.ema50));
-  if(ctx.bd){a(X,'BTC RSI 14 diario',fx(ctx.bd.rsi,0),ctx.bd.rsi>75?-1:ctx.bd.rsi<30?1:sg(ctx.bd.rsi-50));const bc=cl(ctx.bd);a(X,'BTC retorno 7 días',fx(roc(bc,7))+'%',sg(roc(bc,7)));a(X,'BTC MACD histograma diario',fx(ctx.bd.hist,2),sg(ctx.bd.hist))}
-  return o}
-
-const DESC=[
-[/^(BTC|ETH)/,'SOL suele moverse en línea con Bitcoin y Ethereum. Si ellos están fuertes, mejora la probabilidad de que un long en SOL funcione.'],
-[/^Precio vs SMA/,'Compara el precio con la media móvil simple. Precio arriba = tendencia alcista en ese plazo; abajo = bajista.'],
-[/^Precio vs EMA/,'Compara el precio con una media móvil exponencial, que pesa más lo reciente. Arriba = presión compradora; abajo = vendedora.'],
-[/^EMA\d+ vs EMA/,'Cruce de medias: la rápida sobre la lenta indica tendencia alcista (50 sobre 200 es el cruce dorado). Debajo, bajista.'],
-[/^EMA\d+$/,'Media móvil exponencial de 200 períodos: la referencia de tendencia de largo plazo. Precio arriba = mercado alcista.'],
-[/^Pendiente/,'Dirección de la media. Si sube, el impulso de fondo es alcista; si baja, bajista.'],
-[/Tenkan/,'Ichimoku: la línea Tenkan (corto plazo) sobre la Kijun (mediano plazo) es una señal alcista.'],
-[/Kijun/,'La Kijun es el punto medio de los últimos 26 períodos. Precio arriba = fortaleza; actúa como soporte o resistencia dinámica.'],
-[/Regresión/,'Pendiente de la recta que mejor ajusta las últimas 20 velas. Positiva = tendencia ascendente.'],
-[/Aroon/,'Mide si el máximo o el mínimo reciente fue más cercano en el tiempo. Máximo más reciente = tendencia alcista.'],
-[/Donchian/,'Canal de máximos y mínimos de 20 velas. Precio sobre el punto medio = sesgo alcista.'],
-[/^RSI/,'Mide la velocidad del movimiento (0 a 100). Sobre 70 = sobrecompra, riesgo de corrección. Bajo 30 = sobreventa, posible rebote. Sobre 50 = momentum alcista.'],
-[/MACD hist/,'Diferencia entre la línea MACD y su señal. Positivo = momentum comprador; negativo = vendedor.'],
-[/Línea MACD/,'Distancia entre las EMA de 12 y 26. Sobre cero = tendencia de corto plazo alcista.'],
-[/^ROC/,'Variación porcentual del precio frente a hace N velas. Positivo = el precio viene subiendo.'],
-[/^CCI/,'Mide cuánto se aleja el precio de su promedio. Bajo -100 = sobrevendido (rebote posible); sobre +200 = extremo alcista con riesgo de agotamiento.'],
-[/Williams/,'Ubica el cierre dentro del rango reciente. Bajo -80 = sobreventa; sobre -20 = sobrecompra.'],
-[/^Estoc/,'Compara el cierre con el rango de 14 velas. Bajo 20 = sobreventa, sobre 80 = sobrecompra.'],
-[/Awesome/,'Diferencia entre medias de 5 y 34 períodos del punto medio de cada vela. Positivo = momentum alcista.'],
-[/Bollinger %B/,'Posición del precio dentro de las bandas de Bollinger. Bajo 10% = pegado a la banda inferior (rebote posible); sobre 90% = estirado al alza.'],
-[/media Bollinger/,'El precio sobre la media central de Bollinger (SMA20) indica control comprador.'],
-[/Ancho Bollinger/,'Distancia entre las bandas. Muy ancho = volatilidad alta y movimientos bruscos; muy angosto = compresión previa a un movimiento fuerte.'],
-[/Keltner/,'Canal basado en ATR. Precio bajo la banda inferior = sobreextensión bajista (rebote posible); sobre la superior = sobreextensión alcista.'],
-[/^ATR/,'Rango promedio de movimiento de una vela. Un ATR alto implica más riesgo y stops más amplios.'],
-[/Extensión/,'Cuántos ATR se alejó el precio de su media. Muy extendido arriba suele corregir; muy extendido abajo suele rebotar.'],
-[/^Rango/,'Rango de la vela diaria de ayer contra el ATR diario. Un rango muy grande señala expansión de volatilidad.'],
-[/OBV/,'Volumen acumulado según cada vela suba o baje. Pendiente positiva = el volumen acompaña la suba.'],
-[/MFI/,'Como el RSI pero ponderado por volumen. Bajo 20 = sobreventa con volumen; sobre 80 = sobrecompra.'],
-[/Chaikin/,'Mide si los cierres quedan cerca del máximo (acumulación) o del mínimo (distribución), con volumen. Positivo = compra.'],
-[/Volumen (relativo|vs)/,'Volumen de la última vela contra su promedio. Si es alto y la vela es verde, la suba tiene respaldo.'],
-[/VWAP/,'Precio promedio ponderado por volumen. Sobre el VWAP = compradores en control.'],
-[/A\/D/,'Línea de acumulación y distribución. Pendiente positiva = entra dinero al activo.'],
-[/Force/,'Combina el cambio de precio con el volumen. Positivo = fuerza compradora.'],
-[/^Cierre diario/,'Si el cierre de ayer quedó en la mitad alta del rango, dominaron los compradores.'],
-[/Máximos y mínimos/,'Estructura de mercado: máximos y mínimos crecientes = tendencia alcista sana; decrecientes = bajista.'],
-[/Distancia al máx/,'Qué tan cerca está el precio de su techo reciente. Cerca = fortaleza; muy lejos = tendencia debilitada.'],
-[/Distancia al mín/,'Qué tan lejos está del piso de 30 días. Muy pegado a los mínimos indica debilidad.'],
-[/^Vela diaria/,'Si la vela de ayer cerró verde (alcista) o roja (bajista).'],
-[/^Retorno/,'Rendimiento acumulado del período. Positivo = impulso a favor.'],
-[/Posición en rango/,'Ubicación del precio dentro del rango de 30 días. Sobre la mitad = sesgo alcista.'],
-[/^ADX/,'Mide la fuerza de la tendencia, sin importar su dirección. Sobre 25 = tendencia fuerte.'],
-[/Funding/,'Tasa que pagan los longs a los shorts. Muy positiva = demasiados longs (riesgo de barrida); negativa = favorable al long.'],
-[/Base mark/,'Diferencia entre el precio de futuros y el spot. Prima alta = euforia apalancada.'],
-[/Miedo y codicia/,'Índice de ánimo general. El miedo extremo suele marcar suelos; la codicia extrema, techos.'],
-[/long\/short/,'Proporción de cuentas long contra short. Con demasiados longs, el mercado queda vulnerable a una caída.'],
-[/Taker/,'Compras contra ventas agresivas (a mercado). Mayor a 1 = predominan compradores.'],
-[/^OI/,'Interés abierto contra precio. Sube con precio en alza = entra dinero nuevo a favor; sube con precio a la baja = presión vendedora.']
-];
-function tipText(n){const m=DESC.find(d=>d[0].test(n));return m?m[1]:'Indicador técnico que vota a favor, en contra o neutral para una compra long.'}
-
-function renderInd(p){
-  const I=buildIndicators(p);if(!I.length)return;
-  const b=I.filter(x=>x.s>0).length,r=I.filter(x=>x.s<0).length,n=I.length-b-r;
-  $('ind-sum').innerHTML=`<div class="bar"><i style="width:${b/I.length*100}%;background:var(--up)"></i><i style="width:${n/I.length*100}%;background:#566"></i><i style="width:${r/I.length*100}%;background:var(--down)"></i></div><div class="hint" style="margin:0 0 14px"><b class="up">${b} alcistas</b> · ${n} neutrales · <b class="down">${r} bajistas</b> de ${I.length}</div>`;
-  const g={};I.forEach(x=>(g[x.g]=g[x.g]||[]).push(x));
-  $('ind-grid').innerHTML=Object.keys(g).map(k=>`<div><h3>${k}</h3>${g[k].map(x=>`<div class="ir" tabindex="0"><span>${x.n}</span><span class="num">${x.v}<i class="dot ${x.s>0?'u':x.s<0?'d':''}"></i></span><div class="tip"><b>${x.n}</b><br>${tipText(x.n)}<br><em>${x.s>0?'Ahora vota a favor de entrar long.':x.s<0?'Ahora vota en contra de entrar long.':'Ahora está neutral.'}</em></div></div>`).join('')}</div>`).join('')}
-
-/* ---------- Lógica del plan ---------- */
-function trendOf(t, price){
-  if(!t) return {s:0,label:'—'};
-  let s=0;
-  if(price>t.ema50) s++; else s--;
-  if(t.ema20>t.ema50) s++; else s--;
-  if(t.ema50>t.ema200) s++; else s--;
-  return {s, label: s>=2?'Alcista':(s<=-2?'Bajista':'Lateral')};
-}
+function trendOf(t,price){if(!t)return{s:0,label:'—'};let s=0;s+=price>t.ema50?1:-1;s+=t.ema20>t.ema50?1:-1;s+=t.ema50>t.ema200?1:-1;return{s,label:s>=2?'Alcista':s<=-2?'Bajista':'Lateral'}}
 
 function computePlan(price){
-  const t15=TF['15m'], t1=TF['1h'], t4=TF['4h'];
-  if(!t15||!t1||!t4) return null;
-
-  const lev = +$('r-lev').value;
-  const tr4=trendOf(t4,price), tr1=trendOf(t1,price);
-
-  const L=buildLevels(price);
-  const ss=L.filter(x=>x.p<price*0.998), rs=L.filter(x=>x.p>price*1.002);
-  const strong=ss.filter(x=>x.n>=2);
-  const sObj=(strong.length?strong:ss).sort((a,b)=>b.p-a.p)[0];
-  const support=sObj?sObj.p:price*0.98;
-  const rObj=rs.sort((a,b)=>a.p-b.p)[0], resistance=rObj?rObj.p:null;
-  const src='confluencia de '+(sObj?sObj.n:1)+' niveles';
-  const atr1 = t1.atr;
-  const entry = support;
-  const sl = support - 0.5*atr1;
-  const risk = entry - sl;
-  const slPct = risk/entry*100;
-  const tp = [1.5,2.5,4].map(m=>entry+risk*m);
-  const liq = entry*(1 - 1/lev + 0.005);
-
-  // Puntaje
-  let score=0; const chips=[];
-  const add=(v,txt)=>{ score+=v; chips.push({v,txt}); };
-  add(tr4.s>=2?2:(tr4.s<=-2?-2:0), '4h '+tr4.label.toLowerCase());
-  add(tr1.s>=2?1:(tr1.s<=-2?-1:0), '1h '+tr1.label.toLowerCase());
-  const tr1d=trendOf(TF['1d'],price); add(tr1d.s>=2?1:(tr1d.s<=-2?-1:0), 'diario '+tr1d.label.toLowerCase());
-  add(t4.hist>0?1:-1, 'MACD 4h '+(t4.hist>0?'positivo':'negativo'));
-  const IN=buildIndicators(price),bu=IN.filter(x=>x.s>0).length,be=IN.filter(x=>x.s<0).length,net=IN.length?(bu-be)/IN.length*100:0;
-  add(net>25?2:net>10?1:net<-25?-2:net<-10?-1:0,'indicadores: '+bu+' alcistas, '+be+' bajistas de '+IN.length);
-  if(t15.rsi>72) add(-1,'RSI 15m sobrecomprado ('+fmt(t15.rsi,0)+')');
-  else if(t15.rsi<32) add(1,'RSI 15m sobrevendido ('+fmt(t15.rsi,0)+')');
-  if(ctx.funding!=null){
-    if(ctx.funding>0.0005) add(-1,'funding alto');
-    else if(ctx.funding<-0.0002) add(1,'funding negativo');
-  }
-  const distPct=(price-entry)/price*100;
-  const nearSupport = (price-entry) <= Math.max(0.6*t15.atr, price*0.004);
-
-  // Chequeos de riesgo
+  const t15=TF['15m'],t1=TF['1h'],t4=TF['4h'];if(!t15||!t1||!t4)return null;
+  const lev=+$('r-lev').value,tr4=trendOf(t4,price),tr1=trendOf(t1,price),tr1d=trendOf(TF['1d'],price);
+  const Lv=buildLevels(price),ss=Lv.filter(x=>x.p<price*0.998),rs=Lv.filter(x=>x.p>price*1.002),strong=ss.filter(x=>x.n>=2);
+  const sObj=(strong.length?strong:ss).sort((a,b)=>b.p-a.p)[0],support=sObj?sObj.p:price*0.98;
+  const rObj=rs.sort((a,b)=>a.p-b.p)[0],resistance=rObj?rObj.p:null,src='confluencia de '+(sObj?sObj.n:1)+' niveles';
+  const entry=support,sl=support-0.5*t1.atr,risk=entry-sl,slPct=risk/entry*100,tp=[1.5,2.5,4].map(m=>entry+risk*m),liq=entry*(1-1/lev+0.005);
+  let score=0;const chips=[],add=(v,txt)=>{score+=v;chips.push({v,txt})};
+  add(tr4.s>=2?2:tr4.s<=-2?-2:0,'4h '+tr4.label.toLowerCase());
+  add(tr1.s>=2?1:tr1.s<=-2?-1:0,'1h '+tr1.label.toLowerCase());
+  add(tr1d.s>=2?1:tr1d.s<=-2?-1:0,'diario '+tr1d.label.toLowerCase());
+  add(t4.hist>0?1:-1,'MACD 4h '+(t4.hist>0?'positivo':'negativo'));
+  const bu=ALL.filter(x=>x.s>0).length,be=ALL.filter(x=>x.s<0).length,net=NET;
+  add(net>25?2:net>10?1:net<-25?-2:net<-10?-1:0,`${ALL.length} indicadores: ${bu} alcistas, ${be} bajistas (puntaje ${fmt(net,0)})`);
+  if(SC['1w']!=null)add(SC['1w']>0.1?1:SC['1w']<-0.1?-1:0,'semanal '+(SC['1w']>0?'long':'short'));
+  if(t15.rsi>72)add(-1,'RSI 15m sobrecomprado ('+fmt(t15.rsi,0)+')');else if(t15.rsi<32)add(1,'RSI 15m sobrevendido ('+fmt(t15.rsi,0)+')');
+  if(ctx.funding!=null){if(ctx.funding>0.0005)add(-1,'funding alto');else if(ctx.funding<-0.0002)add(1,'funding negativo')}
+  const distPct=(price-entry)/price*100,nearSupport=(price-entry)<=Math.max(0.6*t15.atr,price*0.004);
   const warns=[];
-  if(entry-sl <= 0) warns.push('El stop quedó mal calculado.');
-  if(slPct>=100/lev*0.8) warns.push(`Con ${lev}X el stop (${fmt(slPct,1)}%) queda casi pegado a la liquidación. Bajá el apalancamiento.`);
-  if(resistance && resistance < tp[0]) warns.push(`La resistencia en ${usd(resistance)} queda antes de TP1: la relación riesgo/beneficio real es menor a 1.5R.`);
-  if(slPct>6) warns.push('El soporte está lejos: el stop es muy amplio para este tamaño de movimiento.');
+  if(slPct>=100/lev*0.8)warns.push(`Con ${lev}X el stop (${fmt(slPct,1)}%) queda casi pegado a la liquidación. Bajá el apalancamiento.`);
+  if(resistance&&resistance<tp[0])warns.push(`La resistencia en ${usd(resistance)} queda antes de TP1: la relación riesgo/beneficio real es menor a 1.5R.`);
+  if(slPct>6)warns.push('El soporte está lejos: el stop es muy amplio para este tamaño de movimiento.');
+  let kind,tag,why;
+  if(score>=5&&net>10&&nearSupport&&!(resistance&&resistance<tp[0])){kind='go';tag='Entrar long ahora';why=`Tendencia a favor y el precio está a ${fmt(distPct,2)}% del soporte (${usd(entry)}). El stop va debajo del soporte, con el riesgo bien definido.`}
+  else if(score>=3){kind='wait';tag=`Esperar retroceso a ${usd(entry)}`;why=`El contexto favorece longs pero el precio está ${fmt(distPct,2)}% arriba del soporte. Dejá una orden límite en ${usd(entry)} o esperá una vela de rechazo en 15m.`}
+  else if(score>=0){kind='wait';tag='Esperar, sin ventaja clara';why='Las temporalidades no se alinean. Sin tendencia clara el stop salta con más frecuencia que el objetivo.'}
+  else{kind='no';tag='No operar long';why='La tendencia de 4h/1h está en contra. Un long acá va contra el flujo y un soporte débil suele romperse.'}
+  return{price,entry,sl,tp,liq,slPct,support,resistance,src,kind,tag,why,chips,warns,lev,distPct}}
 
-  let kind, tag, why;
-  if(score>=5 && net>10 && nearSupport){
-    kind='go'; tag='Entrar long ahora';
-    why=`Tendencia a favor y el precio está a ${fmt(distPct,2)}% del soporte (${usd(entry)}). El stop va debajo del soporte, con el riesgo bien definido.`;
-  } else if(score>=3){
-    kind='wait'; tag=`Esperar retroceso a ${usd(entry)}`;
-    why=`El contexto favorece longs pero el precio está ${fmt(distPct,2)}% arriba del soporte. Comprar acá es entrar tarde y con stop lejos. Dejá una orden límite en ${usd(entry)} o esperá una vela de rechazo en 15m.`;
-  } else if(score>=0){
-    kind='wait'; tag='Esperar, sin ventaja clara';
-    why='Las temporalidades no se alinean. Sin tendencia clara el stop salta con más frecuencia que el objetivo.';
-  } else {
-    kind='no'; tag='No operar long';
-    why='La tendencia de 4h/1h está en contra. Un long acá va contra el flujo y un soporte débil suele romperse.';
-  }
-  return {price,entry,sl,tp,liq,slPct,support,resistance,src,kind,tag,why,chips,score,warns,lev,tr4,tr1,distPct,risk};
-}
+function renderInd(){
+  if(!ALL.length)return;
+  const cnt=a=>[a.filter(x=>x.s>0).length,a.filter(x=>x.s===0).length,a.filter(x=>x.s<0).length];
+  const [b,n,r]=cnt(ALL),N=ALL.length;
+  $('ind-sum').innerHTML=`<div class="bar"><i style="width:${b/N*100}%;background:var(--up)"></i><i style="width:${n/N*100}%;background:#566"></i><i style="width:${r/N*100}%;background:var(--down)"></i></div><div class="hint" style="margin:0 0 12px"><b class="up">${b} alcistas</b> · ${n} neutrales · <b class="down">${r} bajistas</b> de ${N} indicadores · puntaje global ponderado <b class="${NET>0?'up':NET<0?'down':''}">${fmt(NET,0)}</b></div>`;
+  const names={...Object.fromEntries(TFS.map(x=>[x[0],x[1]])),mkt:'Mercado y derivados'};
+  $('ind-tf').innerHTML=Object.keys(names).filter(k=>SC[k]!=null).map(k=>{const [a,c,d]=cnt(ALL.filter(x=>x.tf===k)),s=SC[k]*100;return`<tr><td>${names[k]}</td><td class="num up">${a}</td><td class="num">${c}</td><td class="num down">${d}</td><td class="num ${s>0?'up':s<0?'down':''}">${fmt(s,0)}</td></tr>`}).join('');
+  const sel=$('ind-sel');if(!sel.options.length){Object.keys(names).forEach(k=>sel.add(new Option(names[k],k)));sel.value='1h'}
+  const g={};ALL.filter(x=>x.tf===sel.value).forEach(x=>(g[x.g]=g[x.g]||[]).push(x));
+  $('ind-grid').innerHTML=Object.keys(g).map(k=>`<div><h3>${k} (${g[k].length})</h3>${g[k].map(x=>`<div class="ir" tabindex="0"><span>${x.n}</span><span class="num">${x.v}<i class="dot ${x.s>0?'u':x.s<0?'d':''}"></i></span><div class="tip"><b>${x.n}</b><br>${x.d||IND.GD[x.g]||''}<br><em>${x.s>0?'Ahora vota a favor de entrar long.':x.s<0?'Ahora vota en contra de entrar long.':'Ahora está neutral.'}</em></div></div>`).join('')}</div>`).join('')}
 
-/* ---------- Render ---------- */
+function renderLadder(p){
+  const Lv=buildLevels(p),R=Lv.filter(x=>x.p>p).sort((a,b)=>a.p-b.p).slice(0,6).reverse(),Sp=Lv.filter(x=>x.p<=p).sort((a,b)=>b.p-a.p).slice(0,6);
+  const li=(x,k)=>`<div class="lv ${k}"><span class="num">${usd(x.p)}</span><i>${'●'.repeat(Math.min(x.n,5))}</i><em class="num">${pct((x.p/p-1)*100)}</em><small>${x.l}</small></div>`;
+  $('ladder').innerHTML=R.map(x=>li(x,'r')).join('')+`<div class="lv now"><span class="num">${usd(p)}</span><small>precio actual</small></div>`+Sp.map(x=>li(x,'s')).join('')}
+
 function render(){
-  const price = ctx.price;
-  // tabla por TF (necesita velas, no precio)
-  const rows = [['15m','15 min'],['1h','1 hora'],['4h','4 horas'],['1d','Diario']].map(([key,name])=>{
-    const t=TF[key]; if(!t) return `<tr><td>${name}</td><td colspan="4">—</td></tr>`;
-    const p = price||t.close, tr=trendOf(t,p);
-    const cls = tr.s>=2?'up':(tr.s<=-2?'down':'');
-    return `<tr><td>${name}</td><td class="${cls}">${tr.label}</td><td class="num">${fmt(t.rsi,0)}</td><td class="num">${pct((p/t.ema50-1)*100)}</td><td class="num">${fmt(t.atr/p*100,2)}%</td></tr>`;
-  }).join('');
-  $('tf-body').innerHTML=rows; renderSide(price); renderInd(price);
-
-  if(ctx.funding!=null){ $('d-fund').textContent=pct(ctx.funding*100).replace('%','')+'%'; $('d-fund').className='num '+(ctx.funding>0.0005?'down':(ctx.funding<0?'up':'')); }
-  if(ctx.oi!=null) $('d-oi').textContent=fmt(ctx.oi,0)+' SOL';
-  if(ctx.mark&&price) $('d-basis').textContent=pct((ctx.mark/price-1)*100);
-  if(ctx.fng) $('d-fng').textContent=ctx.fng.value+' · '+({'Extreme Fear':'Miedo extremo','Fear':'Miedo','Neutral':'Neutral','Greed':'Codicia','Extreme Greed':'Codicia extrema'}[ctx.fng.value_classification]||ctx.fng.value_classification);
-
-  const P = price && computePlan(price);
-  if(!P) return;
-
-  const v=$('verdict'); v.className='verdict '+P.kind;
-  $('v-tag').textContent=P.tag; $('v-why').textContent=P.why;
-  $('v-chips').innerHTML=P.chips.map(c=>`<span class="chip ${c.v>0?'up':(c.v<0?'dn':'')}">${c.txt}</span>`).join('');
-
-  $('p-entry').textContent=usd(P.entry); $('p-entry-s').textContent=`${fmt(P.distPct,2)}% bajo el precio`;
-  $('p-sl').textContent=usd(P.sl); $('p-sl-s').textContent=`-${fmt(P.slPct,2)}% (${fmt(P.slPct*P.lev,0)}% del margen)`;
-  $('p-liq').textContent=usd(P.liq); $('p-liq-s').textContent=`${P.lev}X, estimación`;
-  [1,2,3].forEach((n,i)=>{ $('p-tp'+n).textContent=usd(P.tp[i]); $('p-tp'+n+'-s').textContent=pct((P.tp[i]/P.entry-1)*100); });
-  $('p-alert').innerHTML = P.warns.map(w=>'⚠ '+w).join('<br>');
-
-  $('levels-note').textContent = `Soporte: ${usd(P.support)} (${P.src}). Resistencia: ${P.resistance?usd(P.resistance):'sin referencia cercana'}.`;
-
-  // Riesgo
-  const cap=+$('r-cap').value, rk=+$('r-risk').value/100;
-  const riskUsd=cap*rk, size=riskUsd/(P.slPct/100), margin=size/P.lev;
-  const gain=size*((P.tp[0]/P.entry-1)*0.5 + (P.tp[1]/P.entry-1)*0.3 + (P.tp[2]/P.entry-1)*0.2);
+  const price=ctx.price;if(!price&&!TF['1h'])return;
+  const p=price||TF['1h'].close;
+  if(TF['1h']&&Math.abs(p/(LASTP||1)-1)>0.004)computeAll(p);
+  $('tf-body').innerHTML=TFS.map(([k,name])=>{const t=TF[k];if(!t)return`<tr><td>${name}</td><td colspan="5">—</td></tr>`;const tr=trendOf(t,p),s=SC[k]!=null?SC[k]*100:null;
+    return`<tr><td>${name}</td><td class="${tr.s>=2?'up':tr.s<=-2?'down':''}">${tr.label}</td><td class="num">${fmt(t.rsi,0)}</td><td class="num">${pct((p/t.ema50-1)*100)}</td><td class="num">${fmt(t.atr/p*100,2)}%</td><td class="num ${s>0?'up':s<0?'down':''}">${s==null?'—':fmt(s,0)}</td></tr>`}).join('');
+  if(SC['1w']!=null){const w=$('wk');w.textContent='Semanal: '+(SC['1w']>0?'LONG':'SHORT')+' ('+fmt(SC['1w']*100,0)+')';w.className='chip '+(SC['1w']>0?'up':'dn')}
+  renderInd();if(TF['1d'])renderLadder(p);
+  if(ctx.funding!=null){$('d-fund').textContent=fmt(ctx.funding*100,4)+'%';$('d-fund').className='num '+(ctx.funding>0.0005?'down':ctx.funding<0?'up':'')}
+  if(ctx.oi!=null)$('d-oi').textContent=fmt(ctx.oi,0)+' SOL';
+  if(ctx.mark)$('d-basis').textContent=pct((ctx.mark/p-1)*100);
+  if(ctx.fng)$('d-fng').textContent=ctx.fng.value+' · '+({'Extreme Fear':'Miedo extremo','Fear':'Miedo','Neutral':'Neutral','Greed':'Codicia','Extreme Greed':'Codicia extrema'}[ctx.fng.value_classification]||ctx.fng.value_classification);
+  const P=computePlan(p);if(!P)return;
+  $('verdict').className='verdict '+P.kind;$('v-tag').textContent=P.tag;$('v-why').textContent=P.why;
+  $('v-chips').innerHTML=P.chips.map(c=>`<span class="chip ${c.v>0?'up':c.v<0?'dn':''}">${c.txt}</span>`).join('');
+  $('p-entry').textContent=usd(P.entry);$('p-entry-s').textContent=`${fmt(P.distPct,2)}% bajo el precio`;
+  $('p-sl').textContent=usd(P.sl);$('p-sl-s').textContent=`-${fmt(P.slPct,2)}% (${fmt(P.slPct*P.lev,0)}% del margen)`;
+  $('p-liq').textContent=usd(P.liq);$('p-liq-s').textContent=`${P.lev}X, estimación`;
+  [1,2,3].forEach((n,i)=>{$('p-tp'+n).textContent=usd(P.tp[i]);$('p-tp'+n+'-s').textContent=pct((P.tp[i]/P.entry-1)*100)});
+  $('p-alert').innerHTML=P.warns.map(w=>'⚠ '+w).join('<br>');
+  $('levels-note').textContent=`Soporte: ${usd(P.support)} (${P.src}). Resistencia: ${P.resistance?usd(P.resistance):'sin referencia cercana'}.`;
+  const cap=+$('r-cap').value,rk=+$('r-risk').value/100,riskUsd=cap*rk,size=riskUsd/(P.slPct/100),margin=size/P.lev;
+  const gain=size*((P.tp[0]/P.entry-1)*0.5+(P.tp[1]/P.entry-1)*0.3+(P.tp[2]/P.entry-1)*0.2);
   $('r-size').textContent=usd(size)+' ('+fmt(size/P.entry,2)+' SOL)';
   $('r-margin').textContent=usd(margin)+(margin>cap?' · supera tu capital':'');
-  $('r-loss').textContent='-'+usd(riskUsd);
-  $('r-gain').textContent='+'+usd(gain);
-}
+  $('r-loss').textContent='-'+usd(riskUsd);$('r-gain').textContent='+'+usd(gain)}
 
-/* ---------- Precio en vivo ---------- */
-let ws, lastDraw=0;
+let ws,lastDraw=0;
 function connect(){
-  ws = new WebSocket('wss://stream.binance.com:9443/ws/solusdt@trade');
-  ws.onopen=()=>{ $('conn').textContent='en vivo'; $('conn').className='ok'; };
-  ws.onclose=()=>{ $('conn').textContent='reconectando…'; $('conn').className='bad'; setTimeout(connect,2000); };
+  ws=new WebSocket('wss://stream.binance.com:9443/ws/solusdt@trade');
+  ws.onopen=()=>{$('conn').textContent='en vivo';$('conn').className='ok'};
+  ws.onclose=()=>{$('conn').textContent='reconectando…';$('conn').className='bad';setTimeout(connect,2000)};
   ws.onerror=()=>ws.close();
-  ws.onmessage=e=>{
-    ctx.price=parseFloat(JSON.parse(e.data).p);
-    $('price').textContent=usd(ctx.price);
-    const now=Date.now();
-    if(now-lastDraw>1000){ lastDraw=now; render(); }
-  };
-}
+  ws.onmessage=e=>{ctx.price=parseFloat(JSON.parse(e.data).p);$('price').textContent=usd(ctx.price);const now=Date.now();if(now-lastDraw>1000){lastDraw=now;render()}}}
 
-/* ---------- Eventos ---------- */
 ['r-cap','r-risk','r-lev'].forEach(id=>$(id).addEventListener('input',render));
-
+$('ind-sel').addEventListener('change',renderInd);
 window.onload=()=>{
-  [['tv-15m','15'],['tv-1h','60'],['tv-4h','240'],['tv-1d','D']].forEach(([id,iv])=>{
-    new TradingView.widget({width:'100%',height:340,symbol:'BINANCE:SOLUSDT',interval:iv,theme:'dark',style:'1',locale:'es',hide_top_toolbar:false,container_id:id});
-  });
-  connect(); loadAll();
-  setInterval(loadAll,60000);
-};
+  [['tv-15m','15'],['tv-1h','60'],['tv-4h','240'],['tv-1d','D'],['tv-1w','W']].forEach(([id,iv])=>new TradingView.widget({width:'100%',height:340,symbol:'BINANCE:SOLUSDT',interval:iv,theme:'dark',style:'1',locale:'es',hide_top_toolbar:false,container_id:id}));
+  connect();loadAll();setInterval(loadAll,60000)};
 </script>
-
 <script src="backtest.js"></script>
-
 </body>
 </html>
