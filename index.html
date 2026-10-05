@@ -1,235 +1,422 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solana Tactical Oracle & News Feed</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #0b0e11;
-            color: #eaecef;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-        }
-        .main-container {
-            width: 100%;
-            max-width: 1200px;
-        }
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #2b313a;
-            padding-bottom: 15px;
-        }
-        h1 { font-size: 1.4rem; color: #f0b90b; }
-        .live-price { font-size: 1.5rem; font-weight: bold; }
-        
-        .grid-dashboard {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        @media (max-width: 900px) {
-            .grid-dashboard { grid-template-columns: 1fr; }
-        }
-        
-        .card {
-            background: #181a20;
-            border-radius: 12px;
-            padding: 20px;
-            border: 1px solid #2b313a;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-            margin-bottom: 20px;
-        }
-        .card-title {
-            font-size: 1rem;
-            color: #848e9c;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        /* Gráficos de TradingView */
-        .tf-container {
-            background: #1e2329;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 15px;
-            border: 1px solid #2b313a;
-        }
-        .tf-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .tf-name { font-weight: bold; color: #f0b90b; font-size: 0.95rem; }
-        .tradingview-widget-container { height: 220px; width: 100%; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOL/USDT · Panel táctico</title>
+<style>
+  :root{
+    --bg:#0b0e11; --panel:#181a20; --panel2:#1e2329; --line:#2b313a;
+    --txt:#eaecef; --mut:#848e9c; --gold:#f0b90b; --up:#0ecb81; --down:#f6465d; --warn:#f0b90b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--txt);padding:20px;display:flex;justify-content:center}
+  .num{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+  .wrap{width:100%;max-width:1240px}
+  header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:18px}
+  h1{font-size:1.25rem;color:var(--gold)}
+  .hdr-right{display:flex;align-items:center;gap:16px}
+  #price{font-size:1.7rem;font-weight:700}
+  #conn{font-size:.75rem;color:var(--mut)}
+  #conn.ok{color:var(--up)} #conn.bad{color:var(--down)}
+  .grid{display:grid;grid-template-columns:1.1fr 1fr;gap:18px}
+  @media(max-width:920px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:18px}
+  .card h2{font-size:.9rem;font-weight:600;color:var(--mut);margin-bottom:12px}
+  .full{grid-column:1/-1}
 
-        /* Grilla de Plan de Trading (Entradas y Salidas) */
-        .trade-plan-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .plan-box {
-            background: #1e2329;
-            padding: 12px;
-            border-radius: 8px;
-            text-align: center;
-        }
-        .plan-label { font-size: 0.75rem; color: #848e9c; margin-bottom: 4px; }
-        .plan-val { font-size: 1rem; font-weight: bold; }
+  /* Veredicto */
+  .verdict{border-radius:10px;padding:16px;margin-bottom:14px;border:1px solid var(--line);background:var(--panel2)}
+  .verdict .tag{font-size:1.35rem;font-weight:800}
+  .verdict .why{font-size:.85rem;color:var(--mut);margin-top:6px;line-height:1.5}
+  .verdict.go{border-color:var(--up)} .verdict.go .tag{color:var(--up)}
+  .verdict.wait{border-color:var(--warn)} .verdict.wait .tag{color:var(--warn)}
+  .verdict.no{border-color:var(--down)} .verdict.no .tag{color:var(--down)}
+  .score{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+  .chip{font-size:.75rem;padding:3px 8px;border-radius:20px;background:var(--bg);border:1px solid var(--line);color:var(--mut)}
+  .chip.up{color:var(--up);border-color:#0ecb8155} .chip.dn{color:var(--down);border-color:#f6465d55}
 
-        /* Módulo de Noticias */
-        .news-box {
-            background: #1e2329;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            border-left: 3px solid #f0b90b;
-        }
-        .news-title { font-size: 0.9rem; font-weight: bold; margin-bottom: 4px; color: #eaecef; }
-        .news-desc { font-size: 0.8rem; color: #848e9c; line-height: 1.4; }
+  .plan{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px}
+  .box{background:var(--panel2);border-radius:8px;padding:11px;text-align:center}
+  .box .l{font-size:.72rem;color:var(--mut);margin-bottom:3px}
+  .box .v{font-size:1rem;font-weight:700}
+  .box .s{font-size:.7rem;color:var(--mut);margin-top:2px}
+  .up{color:var(--up)} .down{color:var(--down)} .gold{color:var(--gold)}
 
-        .full-width-card { grid-column: 1 / -1; }
-        
-        .up { color: #0ecb81; }
-        .down { color: #f6465d; }
-    </style>
+  .row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  label{display:block;font-size:.72rem;color:var(--mut);margin-bottom:3px}
+  input,select{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:7px 8px;font-size:.9rem}
+  input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+  .hint{font-size:.75rem;color:var(--mut);margin-top:8px;line-height:1.5}
+  .alert{font-size:.8rem;color:var(--warn);margin-top:8px;line-height:1.5}
+  button,.btn{background:var(--gold);color:#111;border:0;border-radius:6px;padding:8px 12px;font-weight:700;font-size:.82rem;cursor:pointer;text-decoration:none;display:inline-block}
+  button.ghost{background:transparent;color:var(--mut);border:1px solid var(--line)}
+
+  table{width:100%;border-collapse:collapse;font-size:.82rem}
+  td,th{padding:6px 4px;text-align:right;border-bottom:1px solid var(--line)}
+  td:first-child,th:first-child{text-align:left;color:var(--mut)}
+  th{font-weight:500;color:var(--mut);font-size:.72rem}
+
+  .news{background:var(--panel2);border-left:3px solid var(--gold);border-radius:8px;padding:10px 12px;margin-bottom:8px}
+  .news a{color:var(--txt);text-decoration:none;font-size:.85rem;font-weight:600;line-height:1.35;display:block}
+  .news a:hover{color:var(--gold)}
+  .news small{color:var(--mut);font-size:.72rem}
+
+  .charts{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:920px){.charts{grid-template-columns:1fr}}
+  .tf{background:var(--panel2);border-radius:8px;padding:10px;border:1px solid var(--line)}
+  .tf b{display:block;color:var(--gold);font-size:.85rem;margin-bottom:8px}
+  .tv{height:300px}
+  .disc{font-size:.72rem;color:var(--mut);text-align:center;margin-top:6px;line-height:1.5}
+</style>
 </head>
 <body>
+<div class="wrap">
+  <header>
+    <h1>SOL / USDT · Panel táctico</h1>
+    <div class="hdr-right">
+      <span id="conn">conectando…</span>
+      <div id="price" class="num">—</div>
+    </div>
+  </header>
 
-    <div class="main-container">
-        <header>
-            <h1>SOL / USDT - Oracle Tactical & News Feed</h1>
-            <div id="header-price" class="live-price">Cargando...</div>
-        </header>
-
-        <div class="grid-dashboard">
-            
-            <!-- Columna Izquierda: Plan de Entradas en Soporte y Salidas 10X -->
-            <div class="card">
-                <div class="card-title">Señal Táctica & Plan 10X (Soporte Oracle)</div>
-                
-                <div class="trade-plan-grid">
-                    <div class="plan-box">
-                        <div class="plan-label">Entrada Óptima (Soporte)</div>
-                        <div id="auto-entry" class="plan-val" style="color: #f0b90b;">--</div>
-                    </div>
-                    <div class="plan-box">
-                        <div class="plan-label">Stop Loss (10X)</div>
-                        <div id="auto-sl" class="plan-val down">--</div>
-                    </div>
-                    <div class="plan-box">
-                        <div class="plan-label">Take Profit 1</div>
-                        <div id="auto-tp1" class="plan-val up">--</div>
-                    </div>
-                </div>
-
-                <div class="trade-plan-grid" style="margin-bottom: 15px;">
-                    <div class="plan-box" style="grid-column: span 1.5;">
-                        <div class="plan-label">Take Profit 2</div>
-                        <div id="auto-tp2" class="plan-val up">--</div>
-                    </div>
-                    <div class="plan-box" style="grid-column: span 1.5;">
-                        <div class="plan-label">Take Profit 3 (Moonbag)</div>
-                        <div id="auto-tp3" class="plan-val up">--</div>
-                    </div>
-                </div>
-
-                <div style="background: #1e2329; padding: 12px; border-radius: 8px; font-size: 0.85rem; color: #848e9c; text-align: center;">
-                    💡 <b>Filtro de Gráfico:</b> La entrada calcula un retroceso técnico del 1.5% bajo el precio actual (zona lógica de testeo del Oracle) para no comprar arriba en el impulso.
-                </div>
-            </div>
-
-            <!-- Columna Derecha: Panel de Noticias Relevantes -->
-            <div class="card">
-                <div class="card-title">Panel de Noticias & Contexto</div>
-                
-                <div class="news-box">
-                    <div class="news-title">Actualización de Ecosistema Solana</div>
-                    <div class="news-desc">Monitoreo activo de volumen institucional, flujo de capital en DEXs y métricas de red para respaldar los puntos de entrada técnicos.</div>
-                </div>
-
-                <div class="news-box">
-                    <div class="news-title">Derivados & Funding Rates</div>
-                    <div class="news-desc">Seguimiento de liquidaciones y tasas de financiación en Binance para evitar trampas de mercado al operar con apalancamiento.</div>
-                </div>
-
-                <div class="news-box" style="margin-bottom: 0;">
-                    <div class="news-title">Confluencia Oracle & Oscilador</div>
-                    <div class="news-desc">Sintonía fina entre los niveles numéricos clave y las zonas de sobreventa para validar gatillos operativos rápidos.</div>
-                </div>
-            </div>
-
-            <!-- Fila Inferior: Gráficos de TradingView Multi-Temporalidad -->
-            <div class="card full-width-card">
-                <div class="card-title">Monitoreo Gráfico Multi-Temporalidad (TradingView)</div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
-                    <div class="tf-container">
-                        <div class="tf-header"><span class="tf-name">15 Min (Gatillo)</span></div>
-                        <div class="tradingview-widget-container" id="tv-15m"></div>
-                    </div>
-                    <div class="tf-container">
-                        <div class="tf-header"><span class="tf-name">1 Hora (Tendencia)</span></div>
-                        <div class="tradingview-widget-container" id="tv-1h"></div>
-                    </div>
-                    <div class="tf-container">
-                        <div class="tf-header"><span class="tf-name">4 Horas (Macro)</span></div>
-                        <div class="tradingview-widget-container" id="tv-4h"></div>
-                    </div>
-                </div>
-            </div>
-
+  <div class="grid">
+    <!-- IZQUIERDA: veredicto + plan -->
+    <div>
+      <div class="card">
+        <h2>Veredicto (long)</h2>
+        <div id="verdict" class="verdict wait">
+          <div class="tag" id="v-tag">Calculando…</div>
+          <div class="why" id="v-why">Descargando velas de Binance.</div>
+          <div class="score" id="v-chips"></div>
         </div>
+
+        <div class="plan">
+          <div class="box"><div class="l">Entrada (límite en soporte)</div><div id="p-entry" class="v num gold">—</div><div class="s" id="p-entry-s"></div></div>
+          <div class="box"><div class="l">Stop loss</div><div id="p-sl" class="v num down">—</div><div class="s" id="p-sl-s"></div></div>
+          <div class="box"><div class="l">Liquidación aprox.</div><div id="p-liq" class="v num">—</div><div class="s" id="p-liq-s"></div></div>
+        </div>
+        <div class="plan">
+          <div class="box"><div class="l">TP1 (1.5R)</div><div id="p-tp1" class="v num up">—</div><div class="s" id="p-tp1-s"></div></div>
+          <div class="box"><div class="l">TP2 (2.5R)</div><div id="p-tp2" class="v num up">—</div><div class="s" id="p-tp2-s"></div></div>
+          <div class="box"><div class="l">TP3 (4R, resto)</div><div id="p-tp3" class="v num up">—</div><div class="s" id="p-tp3-s"></div></div>
+        </div>
+        <div class="alert" id="p-alert"></div>
+      </div>
+
+      <div class="card">
+        <h2>Tus niveles de Oracle Numerics (opcional)</h2>
+        <div class="row">
+          <div><label for="o-sup">Soporte clave</label><input id="o-sup" class="num" type="number" step="0.01" placeholder="ej. 140.50"></div>
+          <div><label for="o-res">Resistencia clave</label><input id="o-res" class="num" type="number" step="0.01" placeholder="ej. 152.00"></div>
+          <div style="display:flex;align-items:flex-end;gap:6px"><button id="o-save">Aplicar</button><button id="o-clear" class="ghost">Borrar</button></div>
+        </div>
+        <div class="hint">Copiá los números que marca Oracle Numerics en tu gráfico. Si los cargás, reemplazan al soporte y la resistencia automáticos, y el plan se recalcula con ellos.</div>
+        <div class="hint"><a class="btn" href="https://es.tradingview.com/chart/6YXj9fdK/" target="_blank" rel="noopener">Abrir mi gráfico en TradingView</a></div>
+      </div>
+
+      <div class="card">
+        <h2>Gestión de riesgo</h2>
+        <div class="row">
+          <div><label for="r-cap">Capital (USDT)</label><input id="r-cap" class="num" type="number" value="1000" min="1"></div>
+          <div><label for="r-risk">Riesgo por trade (%)</label><input id="r-risk" class="num" type="number" value="1" min="0.1" max="10" step="0.1"></div>
+          <div><label for="r-lev">Apalancamiento</label>
+            <select id="r-lev"><option>3</option><option>5</option><option selected>10</option><option>15</option><option>20</option></select></div>
+        </div>
+        <table style="margin-top:12px">
+          <tr><td>Tamaño de posición</td><td id="r-size" class="num">—</td></tr>
+          <tr><td>Margen a usar</td><td id="r-margin" class="num">—</td></tr>
+          <tr><td>Pérdida si toca el stop</td><td id="r-loss" class="num down">—</td></tr>
+          <tr><td>Ganancia si cierra 50% en TP1, 30% en TP2, 20% en TP3</td><td id="r-gain" class="num up">—</td></tr>
+        </table>
+        <div class="hint">El tamaño sale del riesgo que aceptás perder, no del apalancamiento. Con 10X y un stop de 3.5% perdés ~35% del margen en cada stop, y eso sale caro si encadenás tres seguidos.</div>
+      </div>
     </div>
 
-    <!-- Script de TradingView -->
-    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-    <script>
-        function initCharts() {
-            new TradingView.widget({ "width": "100%", "height": "220", "symbol": "BINANCE:SOLUSDT", "interval": "15", "theme": "dark", "style": "1", "locale": "es", "hide_top_toolbar": true, "container_id": "tv-15m" });
-            new TradingView.widget({ "width": "100%", "height": "220", "symbol": "BINANCE:SOLUSDT", "interval": "60", "theme": "dark", "style": "1", "locale": "es", "hide_top_toolbar": true, "container_id": "tv-1h" });
-            new TradingView.widget({ "width": "100%", "height": "220", "symbol": "BINANCE:SOLUSDT", "interval": "240", "theme": "dark", "style": "1", "locale": "es", "hide_top_toolbar": true, "container_id": "tv-4h" });
-        }
+    <!-- DERECHA: mercado + noticias -->
+    <div>
+      <div class="card">
+        <h2>Indicadores por temporalidad</h2>
+        <table>
+          <thead><tr><th>TF</th><th>Tendencia</th><th>RSI</th><th>vs EMA50</th><th>ATR%</th></tr></thead>
+          <tbody id="tf-body"></tbody>
+        </table>
+        <div class="hint" id="levels-note"></div>
+      </div>
 
-        const ws = new WebSocket('wss://stream.binance.com:9443/ws/solusdt@trade');
-        ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            const livePrice = parseFloat(data.p);
-            
-            document.getElementById('header-price').innerText = `$${livePrice.toFixed(2)}`;
-            calcularPlanSoporte(livePrice);
-        };
+      <div class="card">
+        <h2>Derivados y ánimo del mercado</h2>
+        <table>
+          <tr><td>Funding rate (8h)</td><td id="d-fund" class="num">—</td></tr>
+          <tr><td>Open interest</td><td id="d-oi" class="num">—</td></tr>
+          <tr><td>Mark vs spot</td><td id="d-basis" class="num">—</td></tr>
+          <tr><td>Miedo y codicia (crypto)</td><td id="d-fng" class="num">—</td></tr>
+        </table>
+        <div class="hint">Funding muy positivo suele indicar longs apretados y más riesgo de barrida hacia abajo.</div>
+      </div>
 
-        // Calcula una entrada realista proyectando un retroceso al soporte del gráfico
-        function calcularPlanSoporte(livePrice) {
-            // Simulamos que el precio de entrada óptimo es un 1.5% por debajo del precio en vivo (zona de soporte del oráculo)
-            const entryPrice = livePrice * (1 - 0.015);
-            
-            const sl = entryPrice * (1 - 0.035); // Stop Loss para 10X
-            const tp1 = entryPrice * (1 + 0.035 * 1.5);
-            const tp2 = entryPrice * (1 + 0.035 * 2.5);
-            const tp3 = entryPrice * (1 + 0.035 * 4.0);
+      <div class="card">
+        <h2>Noticias de Solana</h2>
+        <div id="news"><div class="hint">Cargando…</div></div>
+      </div>
+    </div>
 
-            document.getElementById('auto-entry').innerText = `$${entryPrice.toFixed(2)}`;
-            document.getElementById('auto-sl').innerText = `$${sl.toFixed(2)}`;
-            document.getElementById('auto-tp1').innerText = `$${tp1.toFixed(2)}`;
-            document.getElementById('auto-tp2').innerText = `$${tp2.toFixed(2)}`;
-            document.getElementById('auto-tp3').innerText = `$${tp3.toFixed(2)}`;
-        }
+    <div class="card full">
+      <h2>Gráficos (TradingView)</h2>
+      <div class="charts">
+        <div class="tf"><b>15 min · gatillo</b><div class="tv" id="tv-15m"></div></div>
+        <div class="tf"><b>1 hora · tendencia</b><div class="tv" id="tv-1h"></div></div>
+        <div class="tf"><b>4 horas · macro</b><div class="tv" id="tv-4h"></div></div>
+      </div>
+      <div class="hint">Estos widgets no incluyen tu indicador Oracle Numerics (los scripts privados no se pueden incrustar). Por eso arriba podés cargar sus niveles a mano.</div>
+    </div>
+  </div>
+  <div class="disc">Herramienta de apoyo, no es asesoramiento financiero. Operar futuros con apalancamiento puede hacerte perder todo el margen.</div>
+</div>
 
-        window.onload = () => {
-            initCharts();
-        };
-    </script>
+<script src="https://s3.tradingview.com/tv.js"></script>
+<script>
+const SYMBOL = 'SOLUSDT';
+const $ = id => document.getElementById(id);
+const fmt = (n, d=2) => (n==null||isNaN(n)) ? '—' : Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const usd = n => '$' + fmt(n);
+const pct = n => (n>=0?'+':'') + fmt(n,2) + '%';
 
+/* ---------- Indicadores ---------- */
+function ema(v, n){ const k=2/(n+1); let e=v[0]; const out=[e]; for(let i=1;i<v.length;i++){ e=v[i]*k+e*(1-k); out.push(e);} return out; }
+function rsi(c, n=14){
+  if(c.length<n+1) return null;
+  let g=0,l=0;
+  for(let i=1;i<=n;i++){ const d=c[i]-c[i-1]; d>=0?g+=d:l-=d; }
+  g/=n; l/=n;
+  for(let i=n+1;i<c.length;i++){ const d=c[i]-c[i-1]; g=(g*(n-1)+Math.max(d,0))/n; l=(l*(n-1)+Math.max(-d,0))/n; }
+  return l===0?100:100-100/(1+g/l);
+}
+function atr(k, n=14){
+  let a=null;
+  for(let i=1;i<k.length;i++){
+    const tr=Math.max(k[i].h-k[i].l, Math.abs(k[i].h-k[i-1].c), Math.abs(k[i].l-k[i-1].c));
+    a = a==null ? tr : (a*(n-1)+tr)/n;
+  }
+  return a;
+}
+function swings(k, side=3){
+  const lows=[], highs=[];
+  for(let i=side;i<k.length-side;i++){
+    let isL=true,isH=true;
+    for(let j=1;j<=side;j++){
+      if(k[i].l>=k[i-j].l||k[i].l>=k[i+j].l) isL=false;
+      if(k[i].h<=k[i-j].h||k[i].h<=k[i+j].h) isH=false;
+    }
+    if(isL) lows.push(k[i].l);
+    if(isH) highs.push(k[i].h);
+  }
+  return {lows,highs};
+}
+
+/* ---------- Datos ---------- */
+const TF = { '15m':null, '1h':null, '4h':null };
+const ctx = { price:null, funding:null, fng:null, oi:null, mark:null };
+let oracle = JSON.parse(localStorage.getItem('oracle')||'{}');
+
+async function getKlines(interval){
+  const r = await fetch(`https://api.binance.com/api/v3/klines?symbol=${SYMBOL}&interval=${interval}&limit=300`);
+  if(!r.ok) throw new Error('klines '+r.status);
+  const raw = await r.json();
+  const k = raw.map(x=>({t:x[0],o:+x[1],h:+x[2],l:+x[3],c:+x[4],v:+x[5]}));
+  const closes = k.slice(0,-1).map(x=>x.c); // solo velas cerradas
+  const closed = k.slice(0,-1);
+  const e20=ema(closes,20), e50=ema(closes,50), e200=ema(closes,200);
+  const last = closes.length-1;
+  return {
+    k:closed, close:closes[last],
+    ema20:e20[last], ema50:e50[last], ema200:e200[last],
+    rsi:rsi(closes), atr:atr(closed), sw:swings(closed.slice(-150))
+  };
+}
+
+async function loadAll(){
+  try{
+    const [a,b,c] = await Promise.all([getKlines('15m'),getKlines('1h'),getKlines('4h')]);
+    TF['15m']=a; TF['1h']=b; TF['4h']=c;
+  }catch(e){ $('v-why').textContent='No pude descargar velas de Binance ('+e.message+'). Revisá la conexión o si Binance está bloqueado en tu red.'; }
+
+  try{
+    const r = await fetch(`https://fapi.binance.com/fapi/v1/premiumIndex?symbol=${SYMBOL}`);
+    const j = await r.json(); ctx.funding=+j.lastFundingRate; ctx.mark=+j.markPrice;
+  }catch(e){}
+  try{
+    const r = await fetch(`https://fapi.binance.com/fapi/v1/openInterest?symbol=${SYMBOL}`);
+    const j = await r.json(); ctx.oi=+j.openInterest;
+  }catch(e){}
+  try{
+    const r = await fetch('https://api.alternative.me/fng/?limit=1');
+    const j = await r.json(); ctx.fng=j.data[0];
+  }catch(e){}
+  render();
+}
+
+async function loadNews(){
+  const box=$('news');
+  try{
+    const r = await fetch('https://min-api.cryptocompare.com/data/v2/news/?lang=EN&categories=SOL');
+    const j = await r.json();
+    const items=(j.Data||[]).slice(0,6);
+    if(!items.length) throw 0;
+    box.innerHTML = items.map(n=>{
+      const h=Math.max(1,Math.round((Date.now()/1000-n.published_on)/3600));
+      const t=document.createElement('div'); t.textContent=n.title;
+      return `<div class="news"><a href="${n.url}" target="_blank" rel="noopener">${t.innerHTML}</a><small>${n.source_info?.name||n.source} · hace ${h} h</small></div>`;
+    }).join('');
+  }catch(e){ box.innerHTML='<div class="hint">No se pudieron cargar las noticias. Probá recargar la página.</div>'; }
+}
+
+/* ---------- Lógica del plan ---------- */
+function trendOf(t, price){
+  if(!t) return {s:0,label:'—'};
+  let s=0;
+  if(price>t.ema50) s++; else s--;
+  if(t.ema20>t.ema50) s++; else s--;
+  if(t.ema50>t.ema200) s++; else s--;
+  return {s, label: s>=2?'Alcista':(s<=-2?'Bajista':'Lateral')};
+}
+
+function computePlan(price){
+  const t15=TF['15m'], t1=TF['1h'], t4=TF['4h'];
+  if(!t15||!t1||!t4) return null;
+
+  const lev = +$('r-lev').value;
+  const tr4=trendOf(t4,price), tr1=trendOf(t1,price);
+
+  // Soportes y resistencias: swings de 1h y 4h
+  const sup = [...t1.sw.lows, ...t4.sw.lows, t1.ema50, t4.ema50].filter(x=>x<price*0.998);
+  const res = [...t1.sw.highs, ...t4.sw.highs].filter(x=>x>price*1.002);
+  let support = sup.length ? Math.max(...sup) : price*0.98;
+  let resistance = res.length ? Math.min(...res) : null;
+  let src = 'automático (swing / EMA50)';
+  if(oracle.sup && oracle.sup>0){ support=oracle.sup; src='tu soporte de Oracle Numerics'; }
+  if(oracle.res && oracle.res>0){ resistance=oracle.res; }
+
+  const atr1 = t1.atr;
+  const entry = support;
+  const sl = support - 0.5*atr1;
+  const risk = entry - sl;
+  const slPct = risk/entry*100;
+  const tp = [1.5,2.5,4].map(m=>entry+risk*m);
+  const liq = entry*(1 - 1/lev + 0.005);
+
+  // Puntaje
+  let score=0; const chips=[];
+  const add=(v,txt)=>{ score+=v; chips.push({v,txt}); };
+  add(tr4.s>=2?2:(tr4.s<=-2?-2:0), '4h '+tr4.label.toLowerCase());
+  add(tr1.s>=2?1:(tr1.s<=-2?-1:0), '1h '+tr1.label.toLowerCase());
+  if(t15.rsi>72) add(-1,'RSI 15m sobrecomprado ('+fmt(t15.rsi,0)+')');
+  else if(t15.rsi<32) add(1,'RSI 15m sobrevendido ('+fmt(t15.rsi,0)+')');
+  if(ctx.funding!=null){
+    if(ctx.funding>0.0005) add(-1,'funding alto');
+    else if(ctx.funding<-0.0002) add(1,'funding negativo');
+  }
+  const distPct=(price-entry)/price*100;
+  const nearSupport = (price-entry) <= Math.max(0.6*t15.atr, price*0.004);
+
+  // Chequeos de riesgo
+  const warns=[];
+  if(entry-sl <= 0) warns.push('El stop quedó mal calculado.');
+  if(slPct>=100/lev*0.8) warns.push(`Con ${lev}X el stop (${fmt(slPct,1)}%) queda casi pegado a la liquidación. Bajá el apalancamiento.`);
+  if(resistance && resistance < tp[0]) warns.push(`La resistencia en ${usd(resistance)} queda antes de TP1: la relación riesgo/beneficio real es menor a 1.5R.`);
+  if(slPct>6) warns.push('El soporte está lejos: el stop es muy amplio para este tamaño de movimiento.');
+
+  let kind, tag, why;
+  if(score>=3 && nearSupport){
+    kind='go'; tag='Entrar long ahora';
+    why=`Tendencia a favor y el precio está a ${fmt(distPct,2)}% del soporte (${usd(entry)}). El stop va debajo del soporte, con el riesgo bien definido.`;
+  } else if(score>=2){
+    kind='wait'; tag=`Esperar retroceso a ${usd(entry)}`;
+    why=`El contexto favorece longs pero el precio está ${fmt(distPct,2)}% arriba del soporte. Comprar acá es entrar tarde y con stop lejos. Dejá una orden límite en ${usd(entry)} o esperá una vela de rechazo en 15m.`;
+  } else if(score>=0){
+    kind='wait'; tag='Esperar, sin ventaja clara';
+    why='Las temporalidades no se alinean. Sin tendencia clara el stop salta con más frecuencia que el objetivo.';
+  } else {
+    kind='no'; tag='No operar long';
+    why='La tendencia de 4h/1h está en contra. Un long acá va contra el flujo y un soporte débil suele romperse.';
+  }
+  return {price,entry,sl,tp,liq,slPct,support,resistance,src,kind,tag,why,chips,score,warns,lev,tr4,tr1,distPct,risk};
+}
+
+/* ---------- Render ---------- */
+function render(){
+  const price = ctx.price;
+  // tabla por TF (necesita velas, no precio)
+  const rows = [['15m','15 min'],['1h','1 hora'],['4h','4 horas']].map(([key,name])=>{
+    const t=TF[key]; if(!t) return `<tr><td>${name}</td><td colspan="4">—</td></tr>`;
+    const p = price||t.close, tr=trendOf(t,p);
+    const cls = tr.s>=2?'up':(tr.s<=-2?'down':'');
+    return `<tr><td>${name}</td><td class="${cls}">${tr.label}</td><td class="num">${fmt(t.rsi,0)}</td><td class="num">${pct((p/t.ema50-1)*100)}</td><td class="num">${fmt(t.atr/p*100,2)}%</td></tr>`;
+  }).join('');
+  $('tf-body').innerHTML=rows;
+
+  if(ctx.funding!=null){ $('d-fund').textContent=pct(ctx.funding*100).replace('%','')+'%'; $('d-fund').className='num '+(ctx.funding>0.0005?'down':(ctx.funding<0?'up':'')); }
+  if(ctx.oi!=null) $('d-oi').textContent=fmt(ctx.oi,0)+' SOL';
+  if(ctx.mark&&price) $('d-basis').textContent=pct((ctx.mark/price-1)*100);
+  if(ctx.fng) $('d-fng').textContent=ctx.fng.value+' · '+({'Extreme Fear':'Miedo extremo','Fear':'Miedo','Neutral':'Neutral','Greed':'Codicia','Extreme Greed':'Codicia extrema'}[ctx.fng.value_classification]||ctx.fng.value_classification);
+
+  const P = price && computePlan(price);
+  if(!P) return;
+
+  const v=$('verdict'); v.className='verdict '+P.kind;
+  $('v-tag').textContent=P.tag; $('v-why').textContent=P.why;
+  $('v-chips').innerHTML=P.chips.map(c=>`<span class="chip ${c.v>0?'up':(c.v<0?'dn':'')}">${c.txt}</span>`).join('') + `<span class="chip">puntaje ${P.score}</span>`;
+
+  $('p-entry').textContent=usd(P.entry); $('p-entry-s').textContent=`${fmt(P.distPct,2)}% bajo el precio`;
+  $('p-sl').textContent=usd(P.sl); $('p-sl-s').textContent=`-${fmt(P.slPct,2)}% (${fmt(P.slPct*P.lev,0)}% del margen)`;
+  $('p-liq').textContent=usd(P.liq); $('p-liq-s').textContent=`${P.lev}X, estimación`;
+  [1,2,3].forEach((n,i)=>{ $('p-tp'+n).textContent=usd(P.tp[i]); $('p-tp'+n+'-s').textContent=pct((P.tp[i]/P.entry-1)*100); });
+  $('p-alert').innerHTML = P.warns.map(w=>'⚠ '+w).join('<br>');
+
+  $('levels-note').textContent = `Soporte: ${usd(P.support)} (${P.src}). Resistencia: ${P.resistance?usd(P.resistance):'sin referencia cercana'}.`;
+
+  // Riesgo
+  const cap=+$('r-cap').value, rk=+$('r-risk').value/100;
+  const riskUsd=cap*rk, size=riskUsd/(P.slPct/100), margin=size/P.lev;
+  const gain=size*((P.tp[0]/P.entry-1)*0.5 + (P.tp[1]/P.entry-1)*0.3 + (P.tp[2]/P.entry-1)*0.2);
+  $('r-size').textContent=usd(size)+' ('+fmt(size/P.entry,2)+' SOL)';
+  $('r-margin').textContent=usd(margin)+(margin>cap?' · supera tu capital':'');
+  $('r-loss').textContent='-'+usd(riskUsd);
+  $('r-gain').textContent='+'+usd(gain);
+}
+
+/* ---------- Precio en vivo ---------- */
+let ws, lastDraw=0;
+function connect(){
+  ws = new WebSocket('wss://stream.binance.com:9443/ws/solusdt@trade');
+  ws.onopen=()=>{ $('conn').textContent='en vivo'; $('conn').className='ok'; };
+  ws.onclose=()=>{ $('conn').textContent='reconectando…'; $('conn').className='bad'; setTimeout(connect,2000); };
+  ws.onerror=()=>ws.close();
+  ws.onmessage=e=>{
+    ctx.price=parseFloat(JSON.parse(e.data).p);
+    $('price').textContent=usd(ctx.price);
+    const now=Date.now();
+    if(now-lastDraw>1000){ lastDraw=now; render(); }
+  };
+}
+
+/* ---------- Eventos ---------- */
+$('o-save').onclick=()=>{
+  oracle={sup:parseFloat($('o-sup').value)||0, res:parseFloat($('o-res').value)||0};
+  localStorage.setItem('oracle',JSON.stringify(oracle)); render();
+};
+$('o-clear').onclick=()=>{ oracle={}; localStorage.removeItem('oracle'); $('o-sup').value=''; $('o-res').value=''; render(); };
+['r-cap','r-risk','r-lev'].forEach(id=>$(id).addEventListener('input',render));
+if(oracle.sup) $('o-sup').value=oracle.sup;
+if(oracle.res) $('o-res').value=oracle.res;
+
+window.onload=()=>{
+  [['tv-15m','15'],['tv-1h','60'],['tv-4h','240']].forEach(([id,iv])=>{
+    new TradingView.widget({width:'100%',height:300,symbol:'BINANCE:SOLUSDT',interval:iv,theme:'dark',style:'1',locale:'es',hide_top_toolbar:false,container_id:id});
+  });
+  connect(); loadAll(); loadNews();
+  setInterval(loadAll,60000); setInterval(loadNews,600000);
+};
+</script>
 </body>
 </html>
