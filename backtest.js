@@ -1,7 +1,8 @@
 /* =====================================================================
    backtest.js · Backtest del plan del panel SOL/USDT
-   Integración: <script src="backtest.js"></script> justo antes de </body>
-   (después del <script> principal). Agrega una tarjeta "Backtest del plan".
+   Integración: ya viene enlazado al final de index.html (<script src="backtest.js">).
+   El modo semanal usa el motor de indicadores IND que está dentro de index.html.
+   Agrega una tarjeta "Backtest del plan" con dos modos: plan 1h (long) y semanal long/short.
    Usa los inputs #r-lev y #r-risk del panel y la constante SYMBOL si existe.
    ===================================================================== */
 (function (root) {
@@ -284,7 +285,62 @@ function runBacktest(data, F, userCfg) {
   };
 }
 
-root.BT = { DEFAULTS, loadData, buildFeatures, simulate, stats, runBacktest };
+/* ---------------- Semanal long/short (solo el gráfico semanal decide) ---------------- */
+async function loadWeekly(sym) {
+  const r = await fetch(`https://api.binance.com/api/v3/klines?symbol=${sym}&interval=1w&limit=1000`);
+  if (!r.ok) throw new Error('klines 1w ' + r.status);
+  const k = (await r.json()).map(x => ({ t: x[0], o: +x[1], h: +x[2], l: +x[3], c: +x[4], v: +x[5] }));
+  while (k.length && k[k.length - 1].t + 7 * 24 * HOUR > Date.now()) k.pop(); // solo semanas cerradas
+  return k;
+}
+
+// Al cierre de cada semana se calcula el puntaje con TODOS los indicadores semanales (motor IND de index.html).
+// Puntaje > umbral => long la semana siguiente; < -umbral => short; en el medio => fuera del mercado.
+// Se opera de apertura a cierre de cada semana; el costo de comisión solo se paga cuando cambia la dirección.
+function weeklyTest(k, userCfg) {
+  const IND = root.IND;
+  if (!IND) throw new Error('Falta el motor de indicadores (viene dentro de index.html).');
+  const cfg = Object.assign({ weeks: 156, th: 0, lev: 1, feeTaker: 0.0005, fundingWeek: 0.0001 * 21, minBars: 60 }, userCfg);
+  const first = Math.max(cfg.minBars, k.length - 1 - cfg.weeks), liqDist = 1 / cfg.lev - 0.005;
+  let eq = 1, bh = 1, prev = null, seg = null, liquidated = false, signalNow = null;
+  const segs = [], rets = [], curve = [], side = { 1: { w: 0, sum: 0, m: 1 }, '-1': { w: 0, sum: 0, m: 1 }, 0: { w: 0 } };
+  const closeSeg = () => { if (seg) { segs.push(seg); seg = null; } };
+  for (let i = first; i < k.length; i++) {
+    const sc = IND.score(IND.compute(k.slice(0, i + 1), '1w'));
+    const dir = sc > cfg.th ? 1 : sc < -cfg.th ? -1 : 0;
+    if (i === k.length - 1) { signalNow = { dir, sc }; break; }
+    const w = k[i + 1];
+    let ret = 0, cost = 0;
+    if (dir) {
+      ret = dir * (w.c / w.o - 1) * cfg.lev;
+      const adverse = dir === 1 ? (w.l / w.o - 1) : -(w.h / w.o - 1);
+      if (cfg.lev > 1 && adverse <= -liqDist) { ret = -1; liquidated = true; }
+      cost += cfg.fundingWeek * cfg.lev;
+    }
+    if (prev !== dir) cost += ((prev ? 1 : 0) + (dir ? 1 : 0)) * cfg.feeTaker * cfg.lev;
+    const net = Math.max(-1, ret - cost);
+    eq = Math.max(0, eq * (1 + net)); bh *= w.c / w.o; rets.push(net);
+    if (dir) { const b = side[dir]; b.w++; b.sum += net; b.m *= (1 + net); } else side[0].w++;
+    if (prev !== dir) { closeSeg(); if (dir) seg = { dir, tStart: w.t, weeks: 0, m: 1 }; }
+    if (seg) { seg.weeks++; seg.m *= (1 + net); seg.tEnd = w.t + 7 * 24 * HOUR; }
+    prev = dir;
+    curve.push({ t: w.t + 7 * 24 * HOUR, eq, bh });
+    if (liquidated) break;
+  }
+  closeSeg();
+  let peak = 1, dd = 0; curve.forEach(c => { peak = Math.max(peak, c.eq); dd = Math.max(dd, 1 - c.eq / peak); });
+  const mu = rets.reduce((a, x) => a + x, 0) / (rets.length || 1), sd = Math.sqrt(rets.reduce((a, x) => a + (x - mu) ** 2, 0) / (rets.length || 1));
+  const wins = segs.filter(s => s.m > 1).length;
+  return {
+    cfg, weeks: rets.length, trades: segs.length, win: segs.length ? wins / segs.length * 100 : 0,
+    ret: (eq - 1) * 100, bh: (bh - 1) * 100, ddPct: dd * 100, sharpe: sd ? mu / sd * Math.sqrt(52) : 0,
+    long: { w: side[1].w, avg: side[1].w ? side[1].sum / side[1].w * 100 : 0, tot: (side[1].m - 1) * 100 },
+    short: { w: side[-1].w, avg: side[-1].w ? side[-1].sum / side[-1].w * 100 : 0, tot: (side[-1].m - 1) * 100 },
+    flat: side[0].w, liquidated, signalNow, curve, segs
+  };
+}
+
+root.BT = { DEFAULTS, loadData, buildFeatures, simulate, stats, runBacktest, loadWeekly, weeklyTest };
 
 /* ---------------- UI ---------------- */
 function initUI() {
@@ -305,6 +361,16 @@ function initUI() {
     <button id="bt-cmp" class="ghost">Comparar variantes</button>
     <button id="bt-csv" class="ghost">Descargar trades (CSV)</button>
     <span id="bt-st" class="hint" style="margin:0;align-self:center"></span>
+  </div>
+  <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--line)">
+    <b class="gold" style="font-size:.88rem">Estrategia semanal long / short</b>
+    <div class="hint" style="margin:4px 0 10px">Decide solo con el gráfico semanal: al cierre de cada semana, si el puntaje de todos los indicadores semanales es positivo va long la semana siguiente; si es negativo, short. Sin stop: lo único que lo saca es la liquidación.</div>
+    <div class="row" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+      <div><label for="bw-weeks">Período</label><select id="bw-weeks"><option value="104">2 años</option><option value="156" selected>3 años</option><option value="260">5 años</option><option value="1000">Máximo disponible</option></select></div>
+      <div><label for="bw-lev">Apalancamiento</label><select id="bw-lev"><option>1</option><option>2</option><option>3</option><option>5</option><option>10</option></select></div>
+      <div><label for="bw-th">Zona neutra del puntaje</label><select id="bw-th"><option value="0">Ninguna (siempre long o short)</option><option value="0.1">±0.10 (fuera del mercado)</option><option value="0.2">±0.20 (fuera del mercado)</option></select></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button id="bw-run">Correr backtest semanal</button><button id="bw-csv" class="ghost">Descargar tramos (CSV)</button></div>
   </div>
   <div id="bt-out" style="margin-top:14px"></div>
   <canvas id="bt-cv" height="170" style="width:100%;display:none;margin-top:10px"></canvas>
@@ -379,6 +445,44 @@ function initUI() {
         <div class="hint">Elegí la variante con esperanza positiva <i>y</i> estable en el tramo out-of-sample, no la de mejor retorno total.</div>`;
       $b('bt-cv').style.display = 'none'; st('Listo.');
     } catch (e) { st('Error: ' + e.message); }
+  };
+
+  let wk = null, wlast = null;
+  function drawW(r) {
+    const cv = $b('bt-cv'), c = r.curve; if (c.length < 2) { cv.style.display = 'none'; return; }
+    cv.style.display = 'block';
+    const dpr = devicePixelRatio || 1, w = cv.width = cv.clientWidth * dpr, h = cv.height = 170 * dpr, g = cv.getContext('2d');
+    const t0 = c[0].t, t1 = c[c.length - 1].t, all = c.flatMap(x => [x.eq, x.bh]), lo = Math.min(...all, 1), hi = Math.max(...all, 1);
+    const X = t => (t - t0) / ((t1 - t0) || 1) * (w - 20) + 10, Y = e => h - 14 * dpr - (e - lo) / ((hi - lo) || 1) * (h - 28 * dpr);
+    g.clearRect(0, 0, w, h); g.strokeStyle = '#2b313a'; g.beginPath(); g.moveTo(10, Y(1)); g.lineTo(w - 10, Y(1)); g.stroke();
+    [['bh', '#848e9c'], ['eq', '#f0b90b']].forEach(([key, col]) => { g.strokeStyle = col; g.lineWidth = 2; g.beginPath(); c.forEach((p, i) => i ? g.lineTo(X(p.t), Y(p[key])) : g.moveTo(X(p.t), Y(p[key]))); g.stroke(); });
+    g.fillStyle = '#848e9c'; g.font = (11 * dpr) + 'px sans-serif'; g.fillText('dorado: estrategia semanal  ·  gris: comprar y mantener (capital = 1)', 12, 14 * dpr);
+  }
+  $b('bw-run').onclick = async () => {
+    try {
+      if (!root.IND) throw new Error('falta el motor de indicadores (viene en index.html)');
+      st('Descargando velas semanales…'); if (!wk) wk = await loadWeekly(sym);
+      st('Calculando señales semanales…'); await new Promise(r => setTimeout(r, 30));
+      const r = weeklyTest(wk, { weeks: +$b('bw-weeks').value, lev: +$b('bw-lev').value, th: +$b('bw-th').value }); wlast = r;
+      const sn = r.signalNow, snTxt = !sn ? '—' : sn.dir > 0 ? '<b class="up">LONG</b>' : sn.dir < 0 ? '<b class="down">SHORT</b>' : '<b>fuera del mercado</b>';
+      const edge = r.ret > r.bh ? 'up' : 'down';
+      $b('bt-out').innerHTML = `<table><thead><tr><th></th><th>Retorno</th><th>DD máx</th><th>Sharpe</th><th>Tramos</th><th>Win% tramos</th></tr></thead><tbody>
+        <tr><td>Semanal long/short ${r.cfg.lev}X</td><td class="num ${cls(r.ret)}">${f2(r.ret, 1)}%</td><td class="num down">-${f2(r.ddPct, 1)}%</td><td class="num">${f2(r.sharpe)}</td><td class="num">${r.trades}</td><td class="num">${f2(r.win, 0)}%</td></tr>
+        <tr><td>Comprar y mantener (1X)</td><td class="num ${cls(r.bh)}">${f2(r.bh, 1)}%</td><td colspan="4">—</td></tr></tbody></table>
+        <table style="margin-top:10px"><thead><tr><th></th><th>Semanas</th><th>Promedio semanal</th><th>Retorno compuesto</th></tr></thead><tbody>
+        <tr><td>Semanas long</td><td class="num">${r.long.w}</td><td class="num ${cls(r.long.avg)}">${f2(r.long.avg)}%</td><td class="num ${cls(r.long.tot)}">${f2(r.long.tot, 1)}%</td></tr>
+        <tr><td>Semanas short</td><td class="num">${r.short.w}</td><td class="num ${cls(r.short.avg)}">${f2(r.short.avg)}%</td><td class="num ${cls(r.short.tot)}">${f2(r.short.tot, 1)}%</td></tr>
+        ${r.flat ? `<tr><td>Fuera del mercado</td><td class="num">${r.flat}</td><td colspan="2">—</td></tr>` : ''}</tbody></table>
+        <div class="hint">Señal de la última semana cerrada (la que rige ahora): ${snTxt}${sn ? ` · puntaje ${f2(sn.sc * 100, 0)}` : ''}. ${r.weeks} semanas simuladas. Costos: comisión 0.05% por lado solo al cambiar de dirección y funding 0.01% cada 8h (se cuenta como costo en ambos lados, criterio conservador). La posición se rebalancea cada semana a exposición constante.</div>
+        ${r.liquidated ? '<div class="alert" style="color:var(--down)">✖ Con este apalancamiento la cuenta se liquidó dentro del período: el movimiento intrasemanal en contra superó el margen.</div>' : ''}
+        ${r.weeks < 52 ? '<div class="alert">⚠ Menos de un año de semanas: muestra demasiado chica para concluir algo.</div>' : r.ret <= 0 ? '<div class="alert" style="color:var(--down)">✖ La estrategia perdió plata en este período.</div>' : `<div class="alert" style="color:var(--${r.ret > r.bh ? 'up' : 'gold'})">${r.ret > r.bh ? '✔ Le ganó a comprar y mantener' : '⚠ Ganó plata pero rindió menos que comprar y mantener'}; ${r.long.tot > 0 && r.short.tot < 0 ? 'ojo: los shorts restaron, conviene probar solo long.' : 'validalo en otros períodos antes de arriesgar plata.'}</div>`}`;
+      drawW(r); st('Listo.');
+    } catch (e) { st('Error: ' + e.message); }
+  };
+  $b('bw-csv').onclick = () => {
+    if (!wlast || !wlast.segs.length) { st('Primero corré el backtest semanal.'); return; }
+    const csv = 'direccion,inicio,fin,semanas,retorno_pct\n' + wlast.segs.map(s => [s.dir > 0 ? 'LONG' : 'SHORT', new Date(s.tStart).toISOString().slice(0, 10), new Date(s.tEnd).toISOString().slice(0, 10), s.weeks, ((s.m - 1) * 100).toFixed(2)].join(',')).join('\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'backtest_semanal.csv'; a.click();
   };
 
   $b('bt-csv').onclick = () => {
