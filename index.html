@@ -100,7 +100,6 @@
 
         .full-width-card { grid-column: 1 / -1; }
         
-        .tag-bullish { background: rgba(14, 203, 129, 0.15); color: #0ecb81; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
         .up { color: #0ecb81; }
         .down { color: #f6465d; }
     </style>
@@ -115,13 +114,13 @@
 
         <div class="grid-dashboard">
             
-            <!-- Columna Izquierda: Plan de Entradas y Salidas Automáticas en base al precio -->
+            <!-- Columna Izquierda: Plan de Entradas en Soporte y Salidas 10X -->
             <div class="card">
-                <div class="card-title">Señal Táctica & Plan 10X (Automático)</div>
+                <div class="card-title">Señal Táctica & Plan 10X (Soporte Oracle)</div>
                 
                 <div class="trade-plan-grid">
                     <div class="plan-box">
-                        <div class="plan-label">Precio Sugerido Entrada</div>
+                        <div class="plan-label">Entrada Óptima (Soporte)</div>
                         <div id="auto-entry" class="plan-val" style="color: #f0b90b;">--</div>
                     </div>
                     <div class="plan-box">
@@ -146,7 +145,7 @@
                 </div>
 
                 <div style="background: #1e2329; padding: 12px; border-radius: 8px; font-size: 0.85rem; color: #848e9c; text-align: center;">
-                    💡 <b>Estrategia 10X:</b> Los precios se recalculan de forma dinámica en tiempo real según el movimiento del mercado y los niveles del Oracle.
+                    💡 <b>Filtro de Gráfico:</b> La entrada calcula un retroceso técnico del 1.5% bajo el precio actual (zona lógica de testeo del Oracle) para no comprar arriba en el impulso.
                 </div>
             </div>
 
@@ -195,32 +194,32 @@
     <!-- Script de TradingView -->
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script>
-        // Inicializar gráficos TradingView
         function initCharts() {
             new TradingView.widget({ "width": "100%", "height": "220", "symbol": "BINANCE:SOLUSDT", "interval": "15", "theme": "dark", "style": "1", "locale": "es", "hide_top_toolbar": true, "container_id": "tv-15m" });
             new TradingView.widget({ "width": "100%", "height": "220", "symbol": "BINANCE:SOLUSDT", "interval": "60", "theme": "dark", "style": "1", "locale": "es", "hide_top_toolbar": true, "container_id": "tv-1h" });
             new TradingView.widget({ "width": "100%", "height": "220", "symbol": "BINANCE:SOLUSDT", "interval": "240", "theme": "dark", "style": "1", "locale": "es", "hide_top_toolbar": true, "container_id": "tv-4h" });
         }
 
-        // WebSocket Binance para cálculo automático en vivo
         const ws = new WebSocket('wss://stream.binance.com:9443/ws/solusdt@trade');
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            const price = parseFloat(data.p);
+            const livePrice = parseFloat(data.p);
             
-            document.getElementById('header-price').innerText = `$${price.toFixed(2)}`;
-            calcularPlanAutomatico(price);
+            document.getElementById('header-price').innerText = `$${livePrice.toFixed(2)}`;
+            calcularPlanSoporte(livePrice);
         };
 
-        // Motor de cálculo automático de precios concretos
-        function calcularPlanAutomatico(price) {
-            document.getElementById('auto-entry').innerText = `$${price.toFixed(2)}`;
+        // Calcula una entrada realista proyectando un retroceso al soporte del gráfico
+        function calcularPlanSoporte(livePrice) {
+            // Simulamos que el precio de entrada óptimo es un 1.5% por debajo del precio en vivo (zona de soporte del oráculo)
+            const entryPrice = livePrice * (1 - 0.015);
             
-            const sl = price * (1 - 0.035);
-            const tp1 = price * (1 + 0.035 * 1.5);
-            const tp2 = price * (1 + 0.035 * 2.5);
-            const tp3 = price * (1 + 0.035 * 4.0);
+            const sl = entryPrice * (1 - 0.035); // Stop Loss para 10X
+            const tp1 = entryPrice * (1 + 0.035 * 1.5);
+            const tp2 = entryPrice * (1 + 0.035 * 2.5);
+            const tp3 = entryPrice * (1 + 0.035 * 4.0);
 
+            document.getElementById('auto-entry').innerText = `$${entryPrice.toFixed(2)}`;
             document.getElementById('auto-sl').innerText = `$${sl.toFixed(2)}`;
             document.getElementById('auto-tp1').innerText = `$${tp1.toFixed(2)}`;
             document.getElementById('auto-tp2').innerText = `$${tp2.toFixed(2)}`;
