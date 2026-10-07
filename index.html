@@ -17,6 +17,8 @@ h1{font-size:1.5rem;color:var(--gold);font-weight:800;letter-spacing:-0.5px;text
 #conn{font-size:.75rem;padding:5px 12px;border-radius:20px;background:var(--panel2);border:1px solid var(--line);color:var(--mut)}
 #conn.ok{color:var(--up);border-color:rgba(16,185,129,0.4);box-shadow:0 0 10px rgba(16,185,129,0.15)}
 #conn.bad{color:var(--down);border-color:rgba(239,68,68,0.4)}
+.tv-link{font-size:.75rem;padding:6px 14px;border-radius:20px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.4);color:var(--gold);text-decoration:none;font-weight:700;transition:all .2s}
+.tv-link:hover{background:var(--gold);color:#07090e;box-shadow:0 0 15px rgba(245,158,11,0.4)}
 
 .tabs-nav{display:flex;gap:8px;margin-bottom:22px;border-bottom:1px solid var(--line);padding-bottom:10px}
 .tab-btn{background:var(--panel2);border:1px solid var(--line);color:var(--mut);padding:9px 18px;border-radius:10px;font-weight:600;font-size:.85rem;cursor:pointer;transition:all .25s ease}
@@ -52,13 +54,6 @@ h1{font-size:1.5rem;color:var(--gold);font-weight:800;letter-spacing:-0.5px;text
 .box .v{font-size:1.1rem;font-weight:800}
 .box .s{font-size:.7rem;color:var(--mut);margin-top:4px}
 .up{color:var(--up)}.down{color:var(--down)}.gold{color:var(--gold)}
-
-.row{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:14px}
-label{display:block;font-size:.75rem;color:var(--mut);margin-bottom:6px;font-weight:600}
-input,select{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:10px 14px;font-size:.9rem;font-weight:600;transition:all .2s}
-input:focus,select:focus{border-color:var(--gold);box-shadow:0 0 10px var(--gold-glow)}
-:focus-visible{outline:none}
-.hint{font-size:.8rem;color:var(--mut);margin-top:12px;line-height:1.6}
 .alert{font-size:.85rem;color:var(--gold);margin-top:12px;line-height:1.5;padding:12px;background:var(--gold-glow);border-radius:10px;border:1px solid rgba(245,158,11,0.3)}
 
 table{width:100%;border-collapse:collapse;font-size:.85rem}
@@ -73,7 +68,6 @@ th{font-weight:600;color:var(--mut);font-size:.75rem;text-transform:uppercase}
 .lv i{color:var(--gold);font-style:normal;letter-spacing:1px;font-size:.65rem}.lv em{font-style:normal;color:var(--mut)}
 .lv small{color:var(--mut);font-size:.72rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-/* Mapa de Liquidaciones Cards (10x exclusivo) */
 .liq-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-top:14px}
 .liq-box{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 8px 25px rgba(0,0,0,0.4)}
 .liq-box h3{font-size:.9rem;color:var(--gold);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
@@ -97,6 +91,7 @@ th{font-weight:600;color:var(--mut);font-size:.75rem;text-transform:uppercase}
 <header>
   <h1>SOL / USDT · Panel Táctico Pro</h1>
   <div class="hr">
+    <a href="https://es.tradingview.com/chart/6YXj9fdK/" target="_blank" class="tv-link">Abrir Gráfico TradingView ↗</a>
     <span class="chip" id="wk">Semanal: —</span>
     <span id="conn">conectando…</span>
     <div id="price" class="num">—</div>
@@ -104,12 +99,12 @@ th{font-weight:600;color:var(--mut);font-size:.75rem;text-transform:uppercase}
 </header>
 
 <div class="tabs-nav">
-  <button class="tab-btn active" onclick="switchTab('dashboard')">Panel Principal & Riesgo</button>
+  <button class="tab-btn active" onclick="switchTab('dashboard')">Panel Principal</button>
   <button class="tab-btn" onclick="switchTab('liquidations')">Mapa de Liquidaciones (10x)</button>
-  <button class="tab-btn" onclick="switchTab('indicators')">Matriz Analítica (400 Ind.)</button>
+  <button class="tab-btn" onclick="switchTab('indicators')">Top 10 Indicadores Maestros</button>
 </div>
 
-<!-- SECCIÓN 1: PANEL PRINCIPAL Y RIESGO -->
+<!-- SECCIÓN 1: PANEL PRINCIPAL -->
 <div id="tab-dashboard" class="tab-content active">
   <div class="grid">
     <div>
@@ -117,7 +112,7 @@ th{font-weight:600;color:var(--mut);font-size:.75rem;text-transform:uppercase}
         <h2>Veredicto Táctico (Sin Stop Loss)</h2>
         <div id="verdict" class="verdict wait">
           <div class="tag" id="v-tag">Calculando…</div>
-          <div class="why" id="v-why">Descargando matriz de mercado.</div>
+          <div class="why" id="v-why">Descargando datos de mercado.</div>
           <div class="score" id="v-chips"></div>
         </div>
         <div class="plan">
@@ -125,26 +120,7 @@ th{font-weight:600;color:var(--mut);font-size:.75rem;text-transform:uppercase}
           <div class="box"><div class="l">Liquidación 10x</div><div id="p-liq" class="v num down">—</div><div class="s">Cruzado</div></div>
           <div class="box"><div class="l">TP Principal (3.5R)</div><div id="p-tp2" class="v num up">—</div><div class="s" id="p-tp2-s"></div></div>
         </div>
-        <div class="alert" id="p-alert">Operativa sin Stop Loss fijo configurada. El riesgo se gestiona estrictamente mediante la separación de márgenes (1/5 posición / 4/5 respaldo).</div>
-      </div>
-      
-      <div class="card">
-        <h2>Gestión de Riesgo por Riesgo Fijo (10x Estructural)</h2>
-        <div class="row">
-          <div><label for="r-cap">Capital Total en Cuenta (USDT)</label><input id="r-cap" class="num" type="number" value="1000" min="1"></div>
-          <div><label for="r-risk-mode">Modo de Asignación</label><select id="r-risk-mode"><option value="pct">% del Capital Total para Trade</option><option value="usdt">Monto Fijo en USDT</option></select></div>
-        </div>
-        <div class="row">
-          <div><label for="r-risk-val" id="lbl-risk-val">Porcentaje Asignado (%)</label><input id="r-risk-val" class="num" type="number" value="20" min="1" max="100" step="1"></div>
-          <div><label>Apalancamiento</label><input class="num" type="text" value="10x Fijo" disabled style="opacity:0.7"></div>
-        </div>
-        <table style="margin-top:14px">
-          <tr><td>Tamaño total de posición (10x)</td><td id="r-size" class="num">—</td></tr>
-          <tr><td>Margen Inicial en Trade (1/5 · 20%)</td><td id="r-margin" class="num">—</td></tr>
-          <tr><td>Respaldo en Cuenta (4/5 · 80%)</td><td id="r-res" class="num">—</td></tr>
-          <tr><td>Potencial de Ganancia Estimada</td><td id="r-gain" class="num up">—</td></tr>
-        </table>
-        <div class="hint">Regla estricta aplicada: <b>10x de apalancamiento</b>, donde <b>1/5 parte (20%)</b> opera como margen inicial del trade y los <b>4/5 restantes (80%)</b> actúan como colchón de respaldo en la cuenta. Sin Stop Loss.</div>
+        <div class="alert" id="p-alert">Operativa sin Stop Loss fijo configurada. El riesgo se gestiona puramente de forma estructural mediante la separación de márgenes.</div>
       </div>
     </div>
     
@@ -168,23 +144,24 @@ th{font-weight:600;color:var(--mut);font-size:.75rem;text-transform:uppercase}
 <div id="tab-liquidations" class="tab-content">
   <div class="card full">
     <h2>Mapa de Liquidaciones · Apalancamiento 10x</h2>
-    <div class="hint" style="margin-bottom:16px">Niveles críticos donde las posiciones apalancadas exactamente a 10x (tanto en largos como cortos basados en los principales swings del mercado) alcanzan su nivel de liquidación forzada. Estos nodos actúan como imanes de liquidez para el precio.</div>
+    <div class="hint" style="margin-bottom:16px">Niveles críticos donde las posiciones apalancadas exactamente a 10x basadas en los swings del mercado alcanzan su nivel de liquidación forzada.</div>
     <div id="liq-container" class="liq-grid"></div>
   </div>
 </div>
 
-<!-- SECCIÓN 3: MATRIZ DE INDICADORES (HASTA 400 INDICADORES) -->
+<!-- SECCIÓN 3: TOP 10 INDICADORES MAESTROS -->
 <div id="tab-indicators" class="tab-content">
   <div class="card full">
-    <h2>Matriz de Análisis Técnico Masivo (400 Indicadores Simulados y Procesados)</h2>
+    <h2>Top 10 Indicadores Maestros del Análisis Técnico</h2>
+    <div class="hint" style="margin-bottom:14px">Los 10 indicadores fundamentales y más eficientes para el análisis técnico de alta precisión.</div>
     <div id="ind-sum"></div>
     <table><thead><tr><th>Temporalidad</th><th>Señales Alcistas</th><th>Neutrales</th><th>Bajistas</th><th>Puntaje Sintético (−100…+100)</th></tr></thead><tbody id="ind-tf"></tbody></table>
-    <div style="margin-top:16px;max-width:300px"><label for="ind-sel">Filtrar desglose de indicadores</label><select id="ind-sel"></select></div>
+    <div style="margin-top:16px;max-width:300px"><label for="ind-sel">Filtrar temporalidad</label><select id="ind-sel"></select></div>
     <div id="ind-grid" class="ig"></div>
   </div>
 </div>
 
-<div class="disc">Herramienta analítica avanzada. Operar futuros con apalancamiento 10x y sin Stop Loss conlleva un riesgo muy elevado de liquidación total del margen asignado.</div>
+<div class="disc">Herramienta analítica avanzada. Operar futuros con apalancamiento 10x y sin Stop Loss conlleva un riesgo muy elevado de liquidación total.</div>
 </div>
 
 <script id="eng">
@@ -195,7 +172,6 @@ const ema=(v,n)=>{const k=2/(n+1);let e=v[0];return v.map((x,i)=>(e=i?x*k+e*(1-k
 const rsiA=(c,n)=>{const o=[];let g=0,l=0;for(let i=1;i<c.length;i++){const d=c[i]-c[i-1];if(i<=n){d>=0?g+=d:l-=d;if(i===n){g/=n;l/=n;o[i]=l?100-100/(1+g/l):100}}else{g=(g*(n-1)+Math.max(d,0))/n;l=(l*(n-1)+Math.max(-d,0))/n;o[i]=l?100-100/(1+g/l):100}}return o};
 const atrA=(k,n=14)=>{const o=[0];let a=null;for(let i=1;i<k.length;i++){const t=Math.max(k[i].h-k[i].l,Math.abs(k[i].h-k[i-1].c),Math.abs(k[i].l-k[i-1].c));a=a==null?t:(a*(n-1)+t)/n;o[i]=a}return o};
 const swings=(k,side=3)=>{const lows=[],highs=[];for(let i=side;i<k.length-side;i++){let a=1,b=1;for(let j=1;j<=side;j++){if(k[i].l>=k[i-j].l||k[i].l>=k[i+j].l)a=0;if(k[i].h<=k[i-j].h||k[i].h<=k[i+j].h)b=0}if(a)lows.push(k[i].l);if(b)highs.push(k[i].h)}return{lows,highs}};
-const mfm=x=>(x.h-x.l)?((x.c-x.l)-(x.h-x.c))/(x.h-x.l):0;
 
 function ctx(k,p){
   const c=k.map(x=>x.c),h=k.map(x=>x.h),l=k.map(x=>x.l),n=k.length,m={};
@@ -207,27 +183,19 @@ function ctx(k,p){
   return X}
 
 const D=[],A=(g,n,min,fn,d)=>D.push({g,n,min,fn,d});
-const T='Tendencia',M='Momentum',V='Volatilidad',W='Volumen y flujo',E='Estructura',X='Osciladores Avanzados';
+const G='Top 10 Maestros';
 
-// Generador masivo para alcanzar y superar los 400 indicadores simulados/calculados con precisión analítica
-for(let i=3; i<=80; i+=2){
-  A(T, 'SMA Periodo '+i, i, X=>{const s=X.sma(i);return [f(s), sg(X.p - s)]}, 'Media móvil simple optimizada');
-  A(T, 'EMA Periodo '+i, i, X=>{const e=X.E(i);return [f(e), sg(X.p - e)]}, 'Media móvil exponencial optimizada');
-  A(M, 'RSI Multi '+i, i+2, X=>{const r=L(rsiA(X.c, i));return [f(r,0), r>68?-1:r<32?1:sg(r-50)]}, 'RSI parametrizado');
-  A(V, 'ATR Ratio '+i, i+2, X=>{const a=L(atrA(X.k, i));return [f(a,2), 1]}, 'Rango verdadero promedio');
-}
-for(let j=1; j<=110; j++){
-  A(X, 'Indicador Sintético V'+j, 10, X=>{const v=Math.sin(X.p+j);return [f(v,2), sg(v)]}, 'Métrica de ciclo armónico');
-}
-
-[10,20,50,100,200].forEach(q=>{
-  A(T,'Precio vs SMA'+q,q,X=>{const a=X.sma(q);return[f(a),sg(X.p-a)]},'Precio sobre SMA'+q);
-  A(T,'Precio vs EMA'+q,q,X=>{const a=X.E(q);return[f(a),sg(X.p-a)]},'Precio sobre EMA'+q);
-});
-[7,14,21].forEach(q=>A(M,'RSI '+q,q+2,X=>{const v=L(X.rsi(q));return[f(v,0),v>70?-1:v<30?1:sg(v-50)]},'RSI clásico'));
-A(M,'MACD histograma',35,X=>{const h=X.macd().hist;return[f(L(h),3),sg(L(h))]},'MACD Histograma');
-[20,50].forEach(q=>A(W,'Chaikin Money Flow '+q,q,X=>{const z=X.k.slice(-q),v=z.reduce((r,x)=>r+mfm(x)*x.v,0)/z.reduce((r,x)=>r+x.v,0);return[f(v,2),sg(v)]},'CMF'));
-A(E,'Estructura de Swing',30,X=>{const s=swings(X.k.slice(-150)),l=s.lows.slice(-2),u=s.highs.slice(-2);if(l.length<2||u.length<2)return null;const up=l[1]>l[0]&&u[1]>u[0];return[up?'crecientes':'mixtos',up?1:-1]},'Estructura');
+// Definición exacta de los 10 mejores indicadores profesionales
+A(G, '1. Relative Strength Index (RSI 14)', 15, X=>{const r=L(X.rsi(14));return [f(r,0), r>70?-1:r<30?1:sg(r-50)]}, 'Mide velocidad y cambio de movimientos de precios.');
+A(G, '2. MACD (Convergencia/Divergencia)', 35, X=>{const h=X.macd().hist;return [f(L(h),3), sg(L(h))]}, 'Mide la relación entre dos medias móviles y su momento.');
+A(G, '3. Media Móvil Exponencial (EMA 50)', 50, X=>{const e=X.E(50);return [f(e), sg(X.p - e)]}, 'Tendencia a mediano plazo con mayor peso reciente.');
+A(G, '4. Media Móvil Exponencial (EMA 200)', 200, X=>{const e=X.E(200);return [f(e), sg(X.p - e)]}, 'El filtro definitivo de tendencia macro de mercado.');
+A(G, '5. Bandas de Bollinger (20, 2)', 25, X=>{const m=X.sma(20),sd=Math.sqrt(X.c.slice(-20).reduce((a,x)=>a+(x-m)**2,0)/20),u=m+2*sd,lo=m-2*sd;const v=(X.p-lo)/(u-lo);return [f(v*100,1)+'%', v>0.8?-1:v<0.2?1:0]}, 'Mide volatilidad y extremos de sobrecompra/sobreventa.');
+A(G, '6. VWAP (Precio Ponderado por Volumen)', 20, X=>{const z=X.k.slice(-20),v=z.reduce((r,x)=>r+((x.h+x.l+x.c)/3)*x.v,0)/z.reduce((r,x)=>r+x.v,0);return [f(v), sg(X.p - v)]}, 'Precio medio institucional ponderado por volumen.');
+A(G, '7. ATR (Rango Verdadero Promedio 14)', 15, X=>{const a=L(X.atr(14));return [f(a,2), 1]}, 'Mide la volatilidad absoluta del precio.');
+A(G, '8. Nube de Ichimoku (Base Tenkan/Kijun)', 30, X=>{const t=(Math.max(...X.k.slice(-9).map(x=>x.h))+Math.min(...X.k.slice(-9).map(x=>x.l)))/2;return [f(t), sg(X.p - t)]}, 'Sistema integral de equilibrio, soporte y tendencia.');
+A(G, '9. SuperTrend (10, 3)', 15, X=>{const a=L(X.atr(10)),hl=(L(X.k).h+L(X.k).l)/2,st=hl>(X.p)?1:-1;return [f(st>0?hl-3*a:hl+3*a), st]}, 'Indicador seguidor de tendencia basado en ATR.');
+A(G, '10. Estocástico (14, 3)', 20, X=>{const k=X.k.slice(-14),hh=Math.max(...k.map(x=>x.h)),ll=Math.min(...k.map(x=>x.l)),stk=((L(X.c)-ll)/(hh-ll||1))*100;return [f(stk,1), stk>80?-1:stk<20?1:sg(stk-50)]}, 'Oscilador de impulso que compara el cierre con el rango.');
 
 function compute(k,tf,p){
   const X=ctx(k,p||L(k).c),o=[];
@@ -236,7 +204,7 @@ function compute(k,tf,p){
 function score(votes){const g={};votes.forEach(x=>(g[x.g]=g[x.g]||[]).push(x.s));const m=Object.values(g).map(a=>a.reduce((x,y)=>x+y,0)/a.length);return m.length?m.reduce((x,y)=>x+y,0)/m.length:0}
 return{compute,score,sg,f,ema,atrA,rsiA,swings,count:D.length}})();
 
-/* ===== INTERFAZ Y LÓGICA DE CONTROL ===== */
+/* ===== INTERFAZ Y LÓGICA ===== */
 function switchTab(id){
   document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
@@ -250,10 +218,10 @@ const TF={},ctx={price:null},L=a=>a[a.length-1];
 let ALL=[],SC={},NET=0,LASTP=0;
 
 async function getK(iv,sym=SYMBOL){
-  const r=await fetch(`https://api.binance.com/api/v3/klines?symbol=${sym}&interval=${iv}&limit=1000`);
+  const r=await fetch(`https://api.binance.com/api/v3/klines?symbol=${sym}&interval=${iv}&limit=250`);
   if(!r.ok)throw new Error(iv+' '+r.status);
   const k=(await r.json()).slice(0,-1).map(x=>({t:x[0],o:+x[1],h:+x[2],l:+x[3],c:+x[4],v:+x[5]}));
-  const c=k.map(x=>x.c),w=c.slice(-20),m=w.reduce((a,x)=>a+x,0)/20,sd=Math.sqrt(w.reduce((a,x)=>a+(x-m)**2,0)/20);
+  const c=k.map(x=>x.c),w=c.slice(-20),m=w.reduce((a,x)=>a+x,0)/20;
   const e12=IND.ema(c,12),e26=IND.ema(c,26),ml=e12.map((x,i)=>x-e26[i]),sg=IND.ema(ml,9);
   return{k,close:L(c),ema20:L(IND.ema(c,20)),ema50:L(IND.ema(c,50)),ema200:L(IND.ema(c,200)),rsi:L(IND.rsiA(c,14)),atr:L(IND.atrA(k,14)),
     hist:L(ml)-L(sg),sw:IND.swings(k.slice(-150))}}
@@ -288,17 +256,14 @@ function computePlan(price){
   const Lv=buildLevels(price),ss=Lv.filter(x=>x.p<price*0.998),strong=ss.filter(x=>x.n>=2);
   const sObj=(strong.length?strong:ss).sort((a,b)=>b.p-a.p)[0],support=sObj?sObj.p:price*0.98;
   const entry=support,risk=0.8*t1.atr,tp2=entry+risk*3.5;
-  
-  const lev=10; 
-  const liq=Math.max(0,entry*(1-(1-0.005*lev)/lev));
-  const distPct=(price-entry)/price*100;
+  const lev=10,liq=Math.max(0,entry*(1-(1-0.005*lev)/lev)),distPct=(price-entry)/price*100;
   
   let score=0;const chips=[];const add=(v,txt)=>{score+=v;chips.push({v,txt})};
   add(tr4.s>=2?2:tr4.s<=-2?-2:0,'4h '+tr4.label.toLowerCase());
   const net=NET;add(net>10?1:net<-10?-1:0,'Puntaje general '+fmt(net,0));
 
   let kind,tag,why;
-  if(score>=1&&net>-20){kind='go';tag='Entrar Long en Soporte';why=`Precio aproximándose a zona estructural (${usd(entry)}). Operativa sin Stop Loss con gestión de márgenes.`}
+  if(score>=1&&net>-20){kind='go';tag='Entrar Long en Soporte';why=`Precio aproximándose a zona estructural (${usd(entry)}). Operativa sin Stop Loss configurada.`}
   else{kind='wait';tag=`Esperar zona ${usd(entry)}`;why=`Esperando mejor confluencia de precio (${fmt(distPct,2)}% actual).`}
 
   return{price,entry,tp2,liq,support,src:sObj?sObj.l:'Soporte técnico',kind,tag,why,chips,lev,distPct}
@@ -323,24 +288,11 @@ function renderLiquidations(p){
   $('liq-container').innerHTML = html;
 }
 
-function renderRisk(P, price){
-  const cap = +$('r-cap').value || 1000;
-  const riskVal = +$('r-risk-val').value || 20; // % asignado del capital total
-  
-  const allocatedCapital = cap * (riskVal / 100);
-  const marginToUse = allocatedCapital * 0.20; // 1/5 del capital asignado para margen
-  const totalPositionSize = marginToUse * 10; // 10x
-  const gainEst = totalPositionSize * 0.05;
-  
-  $('r-size').textContent = usd(totalPositionSize) + ' (' + fmt(totalPositionSize/price, 2) + ' SOL)';$('r-margin').textContent = usd(marginToUse) + ' (20% margen inicial del trade)';
-  $('r-res').textContent = usd(cap - marginToUse) + ' (80\% respaldo seguro en cuenta)';$('r-gain').textContent = '+' + usd(gainEst) + ' (Estimado objetivo)';
-}
-
 function renderInd(){
   if(!ALL.length)return;
   const cnt=a=>[a.filter(x=>x.s>0).length,a.filter(x=>x.s===0).length,a.filter(x=>x.s<0).length];
   const [b,n,r]=cnt(ALL),N=ALL.length;
-  $('ind-sum').innerHTML=`<div class="bar"><i style="width:${b/N*100}%;background:var(--up)"></i><i style="width:${n/N*100}%;background:#566"></i><i style="width:${r/N*100}%;background:var(--down)"></i></div><div class="hint" style="margin:0 0 14px"><b class="up">${b} alcistas</b> · ${n} neutrales · <b class="down">${r} bajistas</b> (Total procesados: ${N} indicadores) · Puntaje <b class="${NET>0?'up':NET<0?'down':''}">${fmt(NET,0)}</b></div>`;
+  $('ind-sum').innerHTML=`<div class="bar"><i style="width:${b/N*100}%;background:var(--up)"></i><i style="width:${n/N*100}%;background:#566"></i><i style="width:${r/N*100}%;background:var(--down)"></i></div><div class="hint" style="margin:0 0 14px"><b class="up">${b} alcistas</b> · ${n} neutrales · <b class="down">${r} bajistas</b> (Total: ${N} indicadores maestros) · Puntaje <b class="${NET>0?'up':NET<0?'down':''}">${fmt(NET,0)}</b></div>`;
   const names=Object.fromEntries(TFS.map(x=>[x[0],x[1]]));
   $('ind-tf').innerHTML=Object.keys(names).filter(k=>SC[k]!=null).map(k=>{const [a,c,d]=cnt(ALL.filter(x=>x.tf===k)),s=SC[k]*100;return`<tr><td>${names[k]}</td><td class="num up">${a}</td><td class="num">${c}</td><td class="num down">${d}</td><td class="num ${s>0?'up':s<0?'down':''}">${fmt(s,0)}</td></tr>`}).join('');
   const sel=$('ind-sel');if(!sel.options.length){Object.keys(names).forEach(k=>sel.add(new Option(names[k],k)));sel.value='1h'}
@@ -368,8 +320,6 @@ function render(){
   $('p-liq').textContent=usd(P.liq);
   $('p-tp2').textContent=usd(P.tp2);$('p-tp2-s').textContent=`+3.5R`;
   $('levels-note').textContent=`Soporte estructural base: ${usd(P.support)}.`;
-  
-  renderRisk(P, p);
 }
 
 let ws,lastDraw=0;
@@ -378,13 +328,6 @@ function connect(){
   ws.onopen=()=>{$('conn').textContent='Conectado';$('conn').className='ok'};
   ws.onclose=()=>{$('conn').textContent='Reconectando…';$('conn').className='bad';setTimeout(connect,2000)};
   ws.onmessage=e=>{ctx.price=parseFloat(JSON.parse(e.data).p);$('price').textContent=usd(ctx.price);const now=Date.now();if(now-lastDraw>1000){lastDraw=now;render()}}}
-
-['r-cap','r-risk-mode','r-risk-val'].forEach(id=>$(id).addEventListener('input',()=>render()));$('r-risk-mode').addEventListener('change',e=>{
-  const isPct = e.target.value==='pct';
-  $('lbl-risk-val').textContent = isPct ? 'Porcentaje Asignado (%)' : 'Monto Fijo en USDT';
-  $('r-risk-val').value = isPct ? 20 : 200;
-  render();
-});
 
 window.onload=()=>{connect();loadAll();setInterval(loadAll,60000)};
 </script>
