@@ -1,335 +1,927 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en" class="h-full bg-[#080b11] text-slate-200">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SOL/USDT · Panel Táctico Pro</title>
-<style>
-:root{--bg:#05070b;--panel:#0d111a;--panel2:#161d2b;--line:#212d42;--txt:#f8fafc;--mut:#8a99ad;--gold:#f59e0b;--up:#10b981;--down:#ef4444;--gold-glow:rgba(245, 158, 11, 0.15)}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Inter,"Segoe UI",system-ui,sans-serif;background:radial-gradient(1400px 600px at 20% -15%,#1b263b,transparent 65%),var(--bg);color:var(--txt);padding:24px;display:flex;justify-content:center;min-height:100vh}
-.num{font-family:ui-monospace,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
-.wrap{width:100%;max-width:1320px}
-header{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:22px}
-h1{font-size:1.5rem;color:var(--gold);font-weight:800;letter-spacing:-0.5px;text-shadow:0 0 20px rgba(245,158,11,0.3)}
-.hr{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-#price{font-size:2.4rem;font-weight:800;letter-spacing:-1px;color:#fff}
-#conn{font-size:.75rem;padding:5px 12px;border-radius:20px;background:var(--panel2);border:1px solid var(--line);color:var(--mut)}
-#conn.ok{color:var(--up);border-color:rgba(16,185,129,0.4);box-shadow:0 0 10px rgba(16,185,129,0.15)}
-#conn.bad{color:var(--down);border-color:rgba(239,68,68,0.4)}
-.tv-link{font-size:.75rem;padding:6px 14px;border-radius:20px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.4);color:var(--gold);text-decoration:none;font-weight:700;transition:all .2s}
-.tv-link:hover{background:var(--gold);color:#07090e;box-shadow:0 0 15px rgba(245,158,11,0.4)}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solana Tactical Trading Terminal | SOL/USDT Technical Analysis</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Lightweight Charts CDN -->
+  <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              gold: '#e2b13c',
+              goldHover: '#c99a2c',
+              darkBg: '#080b11',
+              cardBg: '#0f1420',
+              border: '#1e293b',
+              bull: '#00e676',
+              bear: '#ff5252',
+              cyan: '#00e5ff'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
 
-.tabs-nav{display:flex;gap:8px;margin-bottom:22px;border-bottom:1px solid var(--line);padding-bottom:10px}
-.tab-btn{background:var(--panel2);border:1px solid var(--line);color:var(--mut);padding:9px 18px;border-radius:10px;font-weight:600;font-size:.85rem;cursor:pointer;transition:all .25s ease}
-.tab-btn.active{background:var(--gold);color:#07090e;border-color:var(--gold);box-shadow:0 0 15px rgba(245,158,11,0.4)}
-.tab-content{display:none}
-.tab-content.active{display:block}
+  <style>
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f1420;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #2a3447;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3e4c66;
+    }
 
-.grid{display:grid;grid-template-columns:1.15fr 1fr;gap:22px}
-@media(max-width:980px){.grid{grid-template-columns:1fr}}
-.card{background:linear-gradient(180deg,#101622,#0a0e17);border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:22px;box-shadow:0 15px 40px rgba(0,0,0,0.6);position:relative;overflow:hidden}
-.card h2{font-size:1.05rem;font-weight:700;color:#f1f5f9;margin-bottom:16px;display:flex;align-items:center;gap:10px}
-.card h2:before{content:"";width:4px;height:16px;background:var(--gold);border-radius:2px;box-shadow:0 0 10px var(--gold)}
-.full{grid-column:1/-1}
-
-.verdict{border-radius:14px;padding:20px;margin-bottom:16px;border:1px solid var(--line);background:var(--panel2);box-shadow:inset 0 1px 0 rgba(255,255,255,0.06)}
-.verdict .tag{font-size:1.5rem;font-weight:800;letter-spacing:-0.5px}
-.verdict .why{font-size:.9rem;color:var(--mut);margin-top:8px;line-height:1.6}
-.verdict.go{border-color:var(--up);background:linear-gradient(180deg,rgba(16,185,129,0.1),var(--panel2));box-shadow:0 0 20px rgba(16,185,129,0.1)}
-.verdict.go .tag{color:var(--up)}
-.verdict.wait{border-color:var(--gold);background:linear-gradient(180deg,rgba(245,158,11,0.1),var(--panel2));box-shadow:0 0 20px rgba(245,158,11,0.1)}
-.verdict.wait .tag{color:var(--gold)}
-.verdict.no{border-color:var(--down);background:linear-gradient(180deg,rgba(239,68,68,0.1),var(--panel2))}
-.verdict.no .tag{color:var(--down)}
-
-.score{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
-.chip{font-size:.75rem;padding:5px 12px;border-radius:20px;background:var(--bg);border:1px solid var(--line);color:var(--mut);font-weight:500}
-.chip.up{color:var(--up);border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.06)}
-.chip.dn{color:var(--down);border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.06)}
-
-.plan{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
-.box{background:var(--panel2);border-radius:12px;padding:14px;text-align:center;border:1px solid var(--line)}
-.box .l{font-size:.72rem;color:var(--mut);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
-.box .v{font-size:1.1rem;font-weight:800}
-.box .s{font-size:.7rem;color:var(--mut);margin-top:4px}
-.up{color:var(--up)}.down{color:var(--down)}.gold{color:var(--gold)}
-.alert{font-size:.85rem;color:var(--gold);margin-top:12px;line-height:1.5;padding:12px;background:var(--gold-glow);border-radius:10px;border:1px solid rgba(245,158,11,0.3)}
-
-table{width:100%;border-collapse:collapse;font-size:.85rem}
-td,th{padding:10px 8px;text-align:right;border-bottom:1px solid var(--line)}
-td:first-child,th:first-child{text-align:left;color:var(--mut)}
-th{font-weight:600;color:var(--mut);font-size:.75rem;text-transform:uppercase}
-
-.lv{display:grid;grid-template-columns:90px 48px 65px 1fr;align-items:center;gap:8px;padding:8px 12px;margin-bottom:6px;border-radius:10px;font-size:.82rem;background:var(--panel2);border:1px solid var(--line)}
-.lv.r{background:rgba(239,68,68,0.06);border-left:3px solid var(--down)}
-.lv.s{background:rgba(16,185,129,0.06);border-left:3px solid var(--up)}
-.lv.now{grid-template-columns:90px 1fr;background:rgba(245,158,11,0.12);border:1px solid var(--gold);font-weight:800;margin:10px 0;padding:10px 12px}
-.lv i{color:var(--gold);font-style:normal;letter-spacing:1px;font-size:.65rem}.lv em{font-style:normal;color:var(--mut)}
-.lv small{color:var(--mut);font-size:.72rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-
-.liq-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-top:14px}
-.liq-box{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 8px 25px rgba(0,0,0,0.4)}
-.liq-box h3{font-size:.9rem;color:var(--gold);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
-.liq-box h3 span{font-size:.75rem;padding:3px 8px;background:var(--bg);border-radius:6px;border:1px solid var(--line);color:var(--mut)}
-.liq-row{display:flex;justify-content:space-between;font-size:.85rem;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
-
-.ig{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:16px}
-.ig h3{font-size:.88rem;color:var(--gold);margin-bottom:10px}
-.ir{display:flex;justify-content:space-between;gap:8px;font-size:.82rem;padding:6px 8px;border-radius:8px;border-bottom:1px solid var(--line);position:relative;cursor:help;background:var(--panel2)}
-.ir span:first-child{color:var(--mut)}.ir:hover{background:rgba(255,255,255,0.04)}
-.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-left:8px;background:#566}.dot.u{background:var(--up);box-shadow:0 0 6px var(--up)}.dot.d{background:var(--down);box-shadow:0 0 6px var(--down)}
-.bar{display:flex;height:12px;border-radius:6px;overflow:hidden;margin:8px 0 12px;background:var(--bg);box-shadow:inset 0 2px 4px rgba(0,0,0,0.5)}.bar i{display:block}
-.tip{display:none;position:absolute;left:0;bottom:calc(100% + 8px);z-index:30;width:280px;background:#0b0e11;border:1px solid var(--gold);border-radius:10px;padding:10px 12px;font-size:.78rem;line-height:1.5;color:var(--txt);box-shadow:0 12px 30px rgba(0,0,0,0.9)}
-.tip b{color:var(--gold)}.tip em{color:var(--mut);font-style:normal}.ir:hover .tip{display:block}
-
-.disc{font-size:.75rem;color:var(--mut);text-align:center;margin-top:20px;line-height:1.6}
-</style>
-</head>
-<body>
-<div class="wrap">
-<header>
-  <h1>SOL / USDT · Panel Táctico Pro</h1>
-  <div class="hr">
-    <a href="https://es.tradingview.com/chart/6YXj9fdK/" target="_blank" class="tv-link">Abrir Gráfico TradingView ↗</a>
-    <span class="chip" id="wk">Semanal: —</span>
-    <span id="conn">conectando…</span>
-    <div id="price" class="num">—</div>
-  </div>
-</header>
-
-<div class="tabs-nav">
-  <button class="tab-btn active" onclick="switchTab('dashboard')">Panel Principal</button>
-  <button class="tab-btn" onclick="switchTab('liquidations')">Mapa de Liquidaciones (10x)</button>
-  <button class="tab-btn" onclick="switchTab('indicators')">Top 10 Indicadores Maestros</button>
-</div>
-
-<!-- SECCIÓN 1: PANEL PRINCIPAL -->
-<div id="tab-dashboard" class="tab-content active">
-  <div class="grid">
-    <div>
-      <div class="card">
-        <h2>Veredicto Táctico (Sin Stop Loss)</h2>
-        <div id="verdict" class="verdict wait">
-          <div class="tag" id="v-tag">Calculando…</div>
-          <div class="why" id="v-why">Descargando datos de mercado.</div>
-          <div class="score" id="v-chips"></div>
-        </div>
-        <div class="plan">
-          <div class="box"><div class="l">Entrada Óptima</div><div id="p-entry" class="v num gold">—</div><div class="s" id="p-entry-s"></div></div>
-          <div class="box"><div class="l">Liquidación 10x</div><div id="p-liq" class="v num down">—</div><div class="s">Cruzado</div></div>
-          <div class="box"><div class="l">TP Principal (3.5R)</div><div id="p-tp2" class="v num up">—</div><div class="s" id="p-tp2-s"></div></div>
-        </div>
-        <div class="alert" id="p-alert">Operativa sin Stop Loss fijo configurada. El riesgo se gestiona puramente de forma estructural mediante la separación de márgenes.</div>
-      </div>
-    </div>
+    /* Subtle pulse animation for connection status */
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.1); }
+    }
+    .pulse-dot {
+      animation: pulse-glow 2s infinite ease-in-out;
+    }
     
-    <div>
-      <div class="card">
-        <h2>Lectura por Temporalidad</h2>
-        <table><thead><tr><th>TF</th><th>Tendencia</th><th>RSI</th><th>vs EMA50</th><th>ATR%</th><th>Puntaje</th></tr></thead><tbody id="tf-body"></tbody></table>
-        <div class="hint" id="levels-note" style="margin-top:12px"></div>
+    .glass-panel {
+      background: rgba(15, 20, 32, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col font-sans overflow-hidden select-none bg-[#080b11] text-slate-200">
+
+  <!-- TOP HEADER / BRANDING -->
+  <header class="h-14 bg-[#0d121d] border-b border-slate-800/80 px-4 flex items-center justify-between shrink-0 z-20">
+    <div class="flex items-center space-x-3">
+      <!-- Terminal Logo Icon -->
+      <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-400 via-amber-600 to-amber-800 flex items-center justify-center shadow-lg shadow-amber-500/10 border border-amber-400/30">
+        <i class="fa-solid fa-chart-line font-bold text-slate-950 text-base"></i>
       </div>
-      
-      <div class="card">
-        <h2>Mapa de Soportes y Resistencias</h2>
-        <div id="ladder"></div>
-        <div class="hint">Confluencias multi-temporalidad para puntos de entrada ideales.</div>
+      <div>
+        <div class="flex items-center space-x-2">
+          <span class="font-extrabold tracking-wide text-white text-base">TACTICAL <span class="text-amber-400">TERMINAL</span></span>
+          <span class="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded font-mono font-semibold">PRO METRICS v4.2</span>
+        </div>
+        <div class="text-[11px] text-slate-400 flex items-center gap-2">
+          <span>Solana High-Frequency Algorithmic Suite</span>
+          <span class="inline-block w-1 h-1 rounded-full bg-slate-600"></span>
+          <span id="ws-status" class="flex items-center text-emerald-400 text-[10px] font-mono">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block mr-1 pulse-dot"></span> LIVE WS
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAIR SELECTOR & METRICS -->
+    <div class="hidden lg:flex items-center space-x-6 bg-[#080b11] px-4 py-1.5 rounded-lg border border-slate-800/80">
+      <div class="flex items-center space-x-2 border-r border-slate-800 pr-4">
+        <img src="https://assets.coingecko.com/coins/images/4128/standard/solana.png" class="w-6 h-6 rounded-full" alt="SOL" onerror="this.src='https://placehold.co/24x24/9945FF/ffffff?text=S'">
+        <div>
+          <div class="font-bold text-white text-sm leading-none flex items-center gap-1">
+            SOL/USDT
+            <span class="text-[10px] text-slate-400 font-normal">BINANCE</span>
+          </div>
+          <div class="text-[10px] text-slate-400 font-mono">Solana Network</div>
+        </div>
+      </div>
+
+      <!-- Live Price -->
+      <div>
+        <div class="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Real-Time Price</div>
+        <div id="live-price" class="text-base font-bold font-mono text-emerald-400">$148.52</div>
+      </div>
+
+      <!-- 24h Change -->
+      <div>
+        <div class="text-[10px] uppercase tracking-wider text-slate-400 font-medium">24h Change</div>
+        <div id="price-change" class="text-xs font-bold font-mono text-emerald-400">+4.82%</div>
+      </div>
+
+      <!-- 24h High -->
+      <div class="hidden xl:block">
+        <div class="text-[10px] uppercase tracking-wider text-slate-400 font-medium">24h High</div>
+        <div id="price-high" class="text-xs font-mono text-slate-200">$152.10</div>
+      </div>
+
+      <!-- 24h Low -->
+      <div class="hidden xl:block">
+        <div class="text-[10px] uppercase tracking-wider text-slate-400 font-medium">24h Low</div>
+        <div id="price-low" class="text-xs font-mono text-slate-200">$141.35</div>
+      </div>
+
+      <!-- 24h Volume -->
+      <div class="hidden xl:block">
+        <div class="text-[10px] uppercase tracking-wider text-slate-400 font-medium">24h Vol (SOL)</div>
+        <div id="price-vol" class="text-xs font-mono text-slate-200">2.84M</div>
+      </div>
+    </div>
+
+    <!-- QUICK CONTROLS -->
+    <div class="flex items-center space-x-3">
+      <!-- Timeframe Switcher -->
+      <div class="flex bg-[#080b11] p-0.5 rounded-lg border border-slate-800 text-xs font-mono">
+        <button class="tf-btn px-2.5 py-1 rounded text-slate-400 hover:text-white transition" data-tf="1m">1m</button>
+        <button class="tf-btn px-2.5 py-1 rounded bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30" data-tf="5m">5m</button>
+        <button class="tf-btn px-2.5 py-1 rounded text-slate-400 hover:text-white transition" data-tf="15m">15m</button>
+        <button class="tf-btn px-2.5 py-1 rounded text-slate-400 hover:text-white transition" data-tf="1h">1h</button>
+        <button class="tf-btn px-2.5 py-1 rounded text-slate-400 hover:text-white transition" data-tf="4h">4h</button>
+        <button class="tf-btn px-2.5 py-1 rounded text-slate-400 hover:text-white transition" data-tf="1d">1d</button>
+      </div>
+
+      <button id="toggle-sidebar" class="lg:hidden p-2 rounded bg-slate-800 hover:bg-slate-700 text-slate-300">
+        <i class="fa-solid fa-sliders"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- SECONDARY STRIP: MULTI-TIMEFRAME TREND MATRIX -->
+  <div class="h-9 bg-[#0b0f18] border-b border-slate-800/60 px-4 flex items-center justify-between overflow-x-auto whitespace-nowrap text-xs shrink-0 font-mono">
+    <div class="flex items-center space-x-4">
+      <span class="text-slate-400 text-[11px] font-sans flex items-center gap-1">
+        <i class="fa-solid fa-layer-group text-amber-400 text-[10px]"></i> Trend Matrix:
+      </span>
+      <div class="flex items-center space-x-2">
+        <span class="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-semibold">M5: BULLISH</span>
+        <span class="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-semibold">M15: BULLISH</span>
+        <span class="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-semibold">H1: BULLISH</span>
+        <span class="px-2 py-0.5 rounded bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[11px] font-semibold">H4: NEUTRAL</span>
+        <span class="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-semibold">D1: STRONG BULL</span>
+      </div>
+    </div>
+
+    <div class="flex items-center space-x-4 text-[11px]">
+      <div class="flex items-center space-x-1.5">
+        <span class="text-slate-400">Algo Trend Strength:</span>
+        <div class="w-16 bg-slate-800 h-2 rounded-full overflow-hidden">
+          <div id="strength-bar" class="bg-gradient-to-r from-amber-400 to-emerald-400 h-full w-[78%]"></div>
+        </div>
+        <span id="strength-val" class="text-emerald-400 font-bold">78%</span>
+      </div>
+      <div class="flex items-center space-x-1">
+        <span class="text-slate-400">Volatility Index:</span>
+        <span class="text-amber-400 font-bold">HIGH (32.4)</span>
       </div>
     </div>
   </div>
-</div>
 
-<!-- SECCIÓN 2: MAPA DE LIQUIDACIONES (10X EXCLUSIVO) -->
-<div id="tab-liquidations" class="tab-content">
-  <div class="card full">
-    <h2>Mapa de Liquidaciones · Apalancamiento 10x</h2>
-    <div class="hint" style="margin-bottom:16px">Niveles críticos donde las posiciones apalancadas exactamente a 10x basadas en los swings del mercado alcanzan su nivel de liquidación forzada.</div>
-    <div id="liq-container" class="liq-grid"></div>
+  <!-- MAIN BODY LAYOUT -->
+  <div class="flex-1 flex overflow-hidden relative">
+
+    <!-- LEFT TOOLKIT / INDICATOR OVERLAY TRAY (DESKTOP & MOBILE SIDEBAR) -->
+    <aside id="sidebar" class="w-64 bg-[#0d121d] border-r border-slate-800 flex flex-col shrink-0 transition-all duration-300 z-10 absolute lg:relative inset-y-0 left-0 -translate-x-full lg:translate-x-0">
+      <div class="p-3 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-sliders text-amber-400 text-xs"></i>
+          <span class="font-bold text-xs uppercase tracking-wider text-slate-200">Indicator Suite</span>
+        </div>
+        <button id="reset-indicators" class="text-[10px] text-amber-400 hover:underline">Reset All</button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-3 space-y-4 text-xs">
+        
+        <!-- MAIN ALGORITHMIC SIGNALS -->
+        <div>
+          <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-2">Core Algorithmic Engine</div>
+          <div class="space-y-2">
+            
+            <label class="flex items-center justify-between p-2 rounded bg-slate-900/60 border border-slate-800 cursor-pointer hover:border-slate-700 transition">
+              <div class="flex items-center space-x-2">
+                <input type="checkbox" id="chk-oracle-signals" checked class="rounded border-slate-700 text-amber-500 focus:ring-amber-500 focus:ring-offset-0 bg-slate-800">
+                <span class="font-semibold text-slate-200">Tactical Buy/Sell Signals</span>
+              </div>
+              <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+            </label>
+
+            <label class="flex items-center justify-between p-2 rounded bg-slate-900/60 border border-slate-800 cursor-pointer hover:border-slate-700 transition">
+              <div class="flex items-center space-x-2">
+                <input type="checkbox" id="chk-safeguard" checked class="rounded border-slate-700 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-0 bg-slate-800">
+                <span class="font-semibold text-slate-200">Safeguard Confluence</span>
+              </div>
+              <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+            </label>
+
+            <label class="flex items-center justify-between p-2 rounded bg-slate-900/60 border border-slate-800 cursor-pointer hover:border-slate-700 transition">
+              <div class="flex items-center space-x-2">
+                <input type="checkbox" id="chk-oscillator" checked class="rounded border-slate-700 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 bg-slate-800">
+                <span class="font-semibold text-slate-200">Momentum Oscillator</span>
+              </div>
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            </label>
+
+          </div>
+        </div>
+
+        <!-- OVERLAYS & LEVELS -->
+        <div>
+          <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-2">Technical Overlays</div>
+          <div class="space-y-2">
+            
+            <!-- EMAs Toggle -->
+            <label class="flex items-center justify-between p-2 rounded bg-slate-900/60 border border-slate-800 cursor-pointer hover:border-slate-700 transition">
+              <div class="flex items-center space-x-2">
+                <input type="checkbox" id="chk-emas" checked class="rounded border-slate-700 bg-slate-800">
+                <span class="font-medium text-slate-300">EMA Cloud (20, 55, 200)</span>
+              </div>
+              <div class="flex space-x-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-300"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+              </div>
+            </label>
+
+            <!-- Bollinger Bands -->
+            <label class="flex items-center justify-between p-2 rounded bg-slate-900/60 border border-slate-800 cursor-pointer hover:border-slate-700 transition">
+              <div class="flex items-center space-x-2">
+                <input type="checkbox" id="chk-bb" class="rounded border-slate-700 bg-slate-800">
+                <span class="font-medium text-slate-300">Bollinger Bands (20, 2)</span>
+              </div>
+              <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+            </label>
+
+            <!-- Auto Fibonacci -->
+            <label class="flex items-center justify-between p-2 rounded bg-slate-900/60 border border-slate-800 cursor-pointer hover:border-slate-700 transition">
+              <div class="flex items-center space-x-2">
+                <input type="checkbox" id="chk-fibo" checked class="rounded border-slate-700 bg-slate-800">
+                <span class="font-medium text-slate-300">Auto Fibonacci Matrix</span>
+              </div>
+              <span class="w-2 h-2 rounded-full bg-yellow-400"></span>
+            </label>
+
+            <!-- Support & Resistance Pivots -->
+            <label class="flex items-center justify-between p-2 rounded bg-slate-900/60 border border-slate-800 cursor-pointer hover:border-slate-700 transition">
+              <div class="flex items-center space-x-2">
+                <input type="checkbox" id="chk-sr" checked class="rounded border-slate-700 bg-slate-800">
+                <span class="font-medium text-slate-300">Dynamic Key Levels (S/R)</span>
+              </div>
+              <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+            </label>
+
+            <!-- Volume Profile -->
+            <label class="flex items-center justify-between p-2 rounded bg-slate-900/60 border border-slate-800 cursor-pointer hover:border-slate-700 transition">
+              <div class="flex items-center space-x-2">
+                <input type="checkbox" id="chk-vp" checked class="rounded border-slate-700 bg-slate-800">
+                <span class="font-medium text-slate-300">Visible Volume Profile</span>
+              </div>
+              <span class="w-2 h-2 rounded-full bg-slate-500"></span>
+            </label>
+
+            <!-- ADX Strength Index -->
+            <label class="flex items-center justify-between p-2 rounded bg-slate-900/60 border border-slate-800 cursor-pointer hover:border-slate-700 transition">
+              <div class="flex items-center space-x-2">
+                <input type="checkbox" id="chk-adx" checked class="rounded border-slate-700 bg-slate-800">
+                <span class="font-medium text-slate-300">ADX Trend Intensity</span>
+              </div>
+              <span class="w-2 h-2 rounded-full bg-fuchsia-400"></span>
+            </label>
+
+          </div>
+        </div>
+
+        <!-- RISK MANAGEMENT PRESETS -->
+        <div class="pt-2 border-t border-slate-800/60">
+          <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-2">Signal Sensitivity</div>
+          <div class="grid grid-cols-3 gap-1">
+            <button class="sens-btn py-1 px-2 rounded bg-slate-800 text-[11px] text-slate-300 hover:bg-slate-700 text-center font-mono">Scalp</button>
+            <button class="sens-btn py-1 px-2 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[11px] font-semibold text-center font-mono">Day</button>
+            <button class="sens-btn py-1 px-2 rounded bg-slate-800 text-[11px] text-slate-300 hover:bg-slate-700 text-center font-mono">Swing</button>
+          </div>
+        </div>
+
+        <!-- SYSTEM INFORMATION -->
+        <div class="p-3 rounded-lg bg-amber-500/5 border border-amber-500/10 text-[11px] space-y-1 text-slate-400">
+          <div class="text-amber-400 font-semibold flex items-center gap-1">
+            <i class="fa-solid fa-shield-halved text-xs"></i> Signal Filter Guard
+          </div>
+          <p class="leading-relaxed">Automated confluence model filtering out low-liquidity false breakouts on SOL/USDT.</p>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- CENTER & BOTTOM: CHART ENGINE & OSCILLATORS -->
+    <main class="flex-1 flex flex-col min-w-0 bg-[#080b11] relative">
+      
+      <!-- TOP OVERLAY STATS / CURRENT CANDLE INFO -->
+      <div id="chart-legend" class="absolute top-3 left-4 z-10 pointer-events-none flex items-center space-x-3 text-xs font-mono bg-slate-950/70 backdrop-blur px-3 py-1.5 rounded-md border border-slate-800/80">
+        <span class="text-amber-400 font-bold">SOL/USDT</span>
+        <span class="text-slate-400">O: <span id="leg-open" class="text-slate-200">148.10</span></span>
+        <span class="text-slate-400">H: <span id="leg-high" class="text-slate-200">148.95</span></span>
+        <span class="text-slate-400">L: <span id="leg-low" class="text-slate-200">147.80</span></span>
+        <span class="text-slate-400">C: <span id="leg-close" class="text-slate-200">148.52</span></span>
+      </div>
+
+      <!-- MAIN CANDLESTICK CHART CONTAINER -->
+      <div id="main-chart-container" class="w-full flex-1 relative min-h-[350px]"></div>
+
+      <!-- OSCILLATOR PANEL (SPLIT AT BOTTOM) -->
+      <div id="oscillator-wrapper" class="h-36 border-t border-slate-800 flex flex-col bg-[#0b0f18] relative shrink-0">
+        <div class="h-6 px-3 bg-[#0d121d] border-b border-slate-800 flex items-center justify-between text-[11px] font-mono text-slate-400">
+          <div class="flex items-center space-x-3">
+            <span class="text-amber-400 font-bold flex items-center gap-1">
+              <i class="fa-solid fa-wave-square text-[10px]"></i> MOMENTUM OSCILLATOR v4
+            </span>
+            <span class="text-emerald-400">Momentum: <span id="osc-val" class="font-bold">+18.4</span></span>
+            <span class="text-indigo-400">ADX (14): <span id="adx-val" class="font-bold">34.2 (Strong Trend)</span></span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="inline-block w-2 h-2 rounded-full bg-emerald-400"></span> Bullish Expansion
+          </div>
+        </div>
+        <div id="oscillator-chart-container" class="w-full flex-1 relative"></div>
+      </div>
+
+    </main>
+
+    <!-- RIGHT FEED: REAL-TIME SIGNAL ALERTS & AUDIT LOG -->
+    <aside class="w-72 bg-[#0d121d] border-l border-slate-800 flex flex-col shrink-0 hidden xl:flex">
+      
+      <!-- HEADER -->
+      <div class="p-3 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-bolt text-amber-400 text-xs"></i>
+          <span class="font-bold text-xs uppercase tracking-wider text-slate-200">Live Signal Feed</span>
+        </div>
+        <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-mono font-bold">ACTIVE</span>
+      </div>
+
+      <!-- ACTIVE TRADE AUDIT CARD -->
+      <div class="p-3 border-b border-slate-800/80 bg-[#090d15]">
+        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex justify-between">
+          <span>Current Active Setup</span>
+          <span class="text-emerald-400 font-mono">LONG #842</span>
+        </div>
+        
+        <div class="bg-[#0f1420] p-2.5 rounded border border-emerald-500/30 space-y-2">
+          <div class="flex justify-between items-center">
+            <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold font-mono text-xs">BUY SIGNAL</span>
+            <span class="text-[11px] font-mono text-slate-400">Entry: <span class="text-slate-100 font-bold">$147.20</span></span>
+          </div>
+
+          <div class="space-y-1 text-[11px] font-mono">
+            <div class="flex justify-between text-slate-400">
+              <span>Target 1 (TP1):</span>
+              <span class="text-emerald-400 font-bold">$149.50 (+1.56%)</span>
+            </div>
+            <div class="flex justify-between text-slate-400">
+              <span>Target 2 (TP2):</span>
+              <span class="text-emerald-400 font-bold">$152.00 (+3.26%)</span>
+            </div>
+            <div class="flex justify-between text-slate-400">
+              <span>Stop Loss (SL):</span>
+              <span class="text-rose-400 font-bold">$145.10 (-1.42%)</span>
+            </div>
+          </div>
+
+          <div class="pt-1 border-t border-slate-800 flex justify-between items-center text-[10px]">
+            <span class="text-slate-400">Risk/Reward: <strong class="text-slate-200">1 : 2.2</strong></span>
+            <span class="text-amber-400 font-semibold"><i class="fa-solid fa-circle-check"></i> Safeguard Verified</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- RECENT SIGNALS LOG -->
+      <div class="flex-1 overflow-y-auto p-3 space-y-2.5">
+        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Signal Log History</div>
+
+        <!-- Signal Item 1 -->
+        <div class="p-2.5 rounded bg-slate-900/80 border border-slate-800/80 space-y-1 hover:border-slate-700 transition">
+          <div class="flex justify-between items-center text-xs font-mono">
+            <span class="text-emerald-400 font-bold flex items-center gap-1">
+              <i class="fa-solid fa-arrow-trend-up text-[10px]"></i> BUY
+            </span>
+            <span class="text-[10px] text-slate-500">14:22:05</span>
+          </div>
+          <div class="flex justify-between text-[11px] font-mono text-slate-300">
+            <span>Price: $147.20</span>
+            <span class="text-emerald-400">TP2 Hit (+3.1%)</span>
+          </div>
+        </div>
+
+        <!-- Signal Item 2 -->
+        <div class="p-2.5 rounded bg-slate-900/80 border border-slate-800/80 space-y-1 hover:border-slate-700 transition">
+          <div class="flex justify-between items-center text-xs font-mono">
+            <span class="text-rose-400 font-bold flex items-center gap-1">
+              <i class="fa-solid fa-arrow-trend-down text-[10px]"></i> SELL
+            </span>
+            <span class="text-[10px] text-slate-500">11:05:12</span>
+          </div>
+          <div class="flex justify-between text-[11px] font-mono text-slate-300">
+            <span>Price: $149.80</span>
+            <span class="text-emerald-400">TP1 Hit (+1.4%)</span>
+          </div>
+        </div>
+
+        <!-- Signal Item 3 -->
+        <div class="p-2.5 rounded bg-slate-900/80 border border-slate-800/80 space-y-1 hover:border-slate-700 transition">
+          <div class="flex justify-between items-center text-xs font-mono">
+            <span class="text-emerald-400 font-bold flex items-center gap-1">
+              <i class="fa-solid fa-arrow-trend-up text-[10px]"></i> BUY (Safeguard)
+            </span>
+            <span class="text-[10px] text-slate-500">08:14:30</span>
+          </div>
+          <div class="flex justify-between text-[11px] font-mono text-slate-300">
+            <span>Price: $144.10</span>
+            <span class="text-emerald-400">TP2 Hit (+2.9%)</span>
+          </div>
+        </div>
+
+        <!-- Signal Item 4 -->
+        <div class="p-2.5 rounded bg-slate-900/80 border border-slate-800/80 space-y-1 hover:border-slate-700 transition">
+          <div class="flex justify-between items-center text-xs font-mono">
+            <span class="text-rose-400 font-bold flex items-center gap-1">
+              <i class="fa-solid fa-arrow-trend-down text-[10px]"></i> SELL
+            </span>
+            <span class="text-[10px] text-slate-500">04:40:18</span>
+          </div>
+          <div class="flex justify-between text-[11px] font-mono text-slate-300">
+            <span>Price: $146.50</span>
+            <span class="text-slate-500">Closed Breakeven</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- FOOTER STATS -->
+      <div class="p-3 border-t border-slate-800 bg-[#090d15] text-[11px] font-mono space-y-1 text-slate-400">
+        <div class="flex justify-between">
+          <span>Win Rate (30D):</span>
+          <span class="text-emerald-400 font-bold">84.2%</span>
+        </div>
+        <div class="flex justify-between">
+          <span>Avg Profit Factor:</span>
+          <span class="text-amber-400 font-bold">2.41</span>
+        </div>
+      </div>
+
+    </aside>
+
   </div>
-</div>
 
-<!-- SECCIÓN 3: TOP 10 INDICADORES MAESTROS -->
-<div id="tab-indicators" class="tab-content">
-  <div class="card full">
-    <h2>Top 10 Indicadores Maestros del Análisis Técnico</h2>
-    <div class="hint" style="margin-bottom:14px">Los 10 indicadores fundamentales y más eficientes para el análisis técnico de alta precisión.</div>
-    <div id="ind-sum"></div>
-    <table><thead><tr><th>Temporalidad</th><th>Señales Alcistas</th><th>Neutrales</th><th>Bajistas</th><th>Puntaje Sintético (−100…+100)</th></tr></thead><tbody id="ind-tf"></tbody></table>
-    <div style="margin-top:16px;max-width:300px"><label for="ind-sel">Filtrar temporalidad</label><select id="ind-sel"></select></div>
-    <div id="ind-grid" class="ig"></div>
-  </div>
-</div>
+  <!-- JAVASCRIPT LOGIC & CHARTING APPLICATION -->
+  <script>
+    // Global State
+    let mainChart, mainSeries, volumeSeries;
+    let oscChart, oscHistogram, oscSignalLine;
+    let ema20Series, ema55Series, ema200Series;
+    let bbUpperSeries, bbLowerSeries;
+    let priceLines = [];
+    let volumeProfileSeries = [];
+    let ws = null;
 
-<div class="disc">Herramienta analítica avanzada. Operar futuros con apalancamiento 10x y sin Stop Loss conlleva un riesgo muy elevado de liquidación total.</div>
-</div>
+    let candleData = [];
+    let currentTF = '5m';
 
-<script id="eng">
-const IND=(()=>{
-const sg=x=>x>0?1:x<0?-1:0,L=a=>a[a.length-1],S=(a,n)=>{const s=a.slice(-n);return s.reduce((x,y)=>x+y,0)/s.length};
-const f=(x,d=2)=>x==null||isNaN(x)?'—':(+x).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
-const ema=(v,n)=>{const k=2/(n+1);let e=v[0];return v.map((x,i)=>(e=i?x*k+e*(1-k):x))};
-const rsiA=(c,n)=>{const o=[];let g=0,l=0;for(let i=1;i<c.length;i++){const d=c[i]-c[i-1];if(i<=n){d>=0?g+=d:l-=d;if(i===n){g/=n;l/=n;o[i]=l?100-100/(1+g/l):100}}else{g=(g*(n-1)+Math.max(d,0))/n;l=(l*(n-1)+Math.max(-d,0))/n;o[i]=l?100-100/(1+g/l):100}}return o};
-const atrA=(k,n=14)=>{const o=[0];let a=null;for(let i=1;i<k.length;i++){const t=Math.max(k[i].h-k[i].l,Math.abs(k[i].h-k[i-1].c),Math.abs(k[i].l-k[i-1].c));a=a==null?t:(a*(n-1)+t)/n;o[i]=a}return o};
-const swings=(k,side=3)=>{const lows=[],highs=[];for(let i=side;i<k.length-side;i++){let a=1,b=1;for(let j=1;j<=side;j++){if(k[i].l>=k[i-j].l||k[i].l>=k[i+j].l)a=0;if(k[i].h<=k[i-j].h||k[i].h<=k[i+j].h)b=0}if(a)lows.push(k[i].l);if(b)highs.push(k[i].h)}return{lows,highs}};
+    // Toggle states for indicators
+    const flags = {
+      oracleSignals: true,
+      safeguard: true,
+      oscillator: true,
+      emas: true,
+      bb: false,
+      fibo: true,
+      sr: true,
+      vp: true,
+      adx: true
+    };
 
-function ctx(k,p){
-  const c=k.map(x=>x.c),h=k.map(x=>x.h),l=k.map(x=>x.l),n=k.length,m={};
-  const memo=(key,fn)=>key in m?m[key]:(m[key]=fn());
-  const X={k,c,n,p,
-    sma:q=>S(c,q),ema:q=>memo('e'+q,()=>ema(c,q)),E:q=>L(X.ema(q)),
-    atr:q=>memo('a'+q,()=>atrA(k,q)),rsi:q=>memo('r'+q,()=>rsiA(c,q)),
-    macd:()=>memo('macd',()=>{const a=ema(c,12),b=ema(c,26),ml=a.map((x,i)=>x-b[i]),s=ema(ml,9);return{ml,hist:ml.map((x,i)=>x-s[i])}})};
-  return X}
+    // Initialize Chart Engine
+    function initCharts() {
+      const chartEl = document.getElementById('main-chart-container');
+      const oscEl = document.getElementById('oscillator-chart-container');
 
-const D=[],A=(g,n,min,fn,d)=>D.push({g,n,min,fn,d});
-const G='Top 10 Maestros';
+      // Main Candle Chart
+      mainChart = LightweightCharts.createChart(chartEl, {
+        layout: {
+          background: { type: 'solid', color: '#080b11' },
+          textColor: '#94a3b8',
+          fontFamily: 'JetBrains Mono, monospace',
+        },
+        grid: {
+          vertLines: { color: '#131b2e' },
+          horzLines: { color: '#131b2e' },
+        },
+        crosshair: {
+          mode: LightweightCharts.CrosshairMode.Normal,
+          vertLine: { color: '#e2b13c', width: 1, style: 3 },
+          horzLine: { color: '#e2b13c', width: 1, style: 3 },
+        },
+        rightPriceScale: {
+          borderColor: '#1e293b',
+          scaleMargins: { top: 0.1, bottom: 0.2 },
+        },
+        timeScale: {
+          borderColor: '#1e293b',
+          timeVisible: true,
+          secondsVisible: false,
+        },
+      });
 
-// Definición exacta de los 10 mejores indicadores profesionales
-A(G, '1. Relative Strength Index (RSI 14)', 15, X=>{const r=L(X.rsi(14));return [f(r,0), r>70?-1:r<30?1:sg(r-50)]}, 'Mide velocidad y cambio de movimientos de precios.');
-A(G, '2. MACD (Convergencia/Divergencia)', 35, X=>{const h=X.macd().hist;return [f(L(h),3), sg(L(h))]}, 'Mide la relación entre dos medias móviles y su momento.');
-A(G, '3. Media Móvil Exponencial (EMA 50)', 50, X=>{const e=X.E(50);return [f(e), sg(X.p - e)]}, 'Tendencia a mediano plazo con mayor peso reciente.');
-A(G, '4. Media Móvil Exponencial (EMA 200)', 200, X=>{const e=X.E(200);return [f(e), sg(X.p - e)]}, 'El filtro definitivo de tendencia macro de mercado.');
-A(G, '5. Bandas de Bollinger (20, 2)', 25, X=>{const m=X.sma(20),sd=Math.sqrt(X.c.slice(-20).reduce((a,x)=>a+(x-m)**2,0)/20),u=m+2*sd,lo=m-2*sd;const v=(X.p-lo)/(u-lo);return [f(v*100,1)+'%', v>0.8?-1:v<0.2?1:0]}, 'Mide volatilidad y extremos de sobrecompra/sobreventa.');
-A(G, '6. VWAP (Precio Ponderado por Volumen)', 20, X=>{const z=X.k.slice(-20),v=z.reduce((r,x)=>r+((x.h+x.l+x.c)/3)*x.v,0)/z.reduce((r,x)=>r+x.v,0);return [f(v), sg(X.p - v)]}, 'Precio medio institucional ponderado por volumen.');
-A(G, '7. ATR (Rango Verdadero Promedio 14)', 15, X=>{const a=L(X.atr(14));return [f(a,2), 1]}, 'Mide la volatilidad absoluta del precio.');
-A(G, '8. Nube de Ichimoku (Base Tenkan/Kijun)', 30, X=>{const t=(Math.max(...X.k.slice(-9).map(x=>x.h))+Math.min(...X.k.slice(-9).map(x=>x.l)))/2;return [f(t), sg(X.p - t)]}, 'Sistema integral de equilibrio, soporte y tendencia.');
-A(G, '9. SuperTrend (10, 3)', 15, X=>{const a=L(X.atr(10)),hl=(L(X.k).h+L(X.k).l)/2,st=hl>(X.p)?1:-1;return [f(st>0?hl-3*a:hl+3*a), st]}, 'Indicador seguidor de tendencia basado en ATR.');
-A(G, '10. Estocástico (14, 3)', 20, X=>{const k=X.k.slice(-14),hh=Math.max(...k.map(x=>x.h)),ll=Math.min(...k.map(x=>x.l)),stk=((L(X.c)-ll)/(hh-ll||1))*100;return [f(stk,1), stk>80?-1:stk<20?1:sg(stk-50)]}, 'Oscilador de impulso que compara el cierre con el rango.');
+      // Main Candlestick Series
+      mainSeries = mainChart.addCandlestickSeries({
+        upColor: '#00e676',
+        downColor: '#ff5252',
+        borderVisible: false,
+        wickUpColor: '#00e676',
+        wickDownColor: '#ff5252',
+      });
 
-function compute(k,tf,p){
-  const X=ctx(k,p||L(k).c),o=[];
-  for(const d of D){if(X.n<d.min+2)continue;try{const r=d.fn(X);if(r&&r[1]!=null&&!isNaN(r[1]))o.push({g:d.g,n:d.n,tf,v:r[0],s:r[1],d:d.d})}catch(e){}}
-  return o}
-function score(votes){const g={};votes.forEach(x=>(g[x.g]=g[x.g]||[]).push(x.s));const m=Object.values(g).map(a=>a.reduce((x,y)=>x+y,0)/a.length);return m.length?m.reduce((x,y)=>x+y,0)/m.length:0}
-return{compute,score,sg,f,ema,atrA,rsiA,swings,count:D.length}})();
+      // Overlay EMAs
+      ema20Series = mainChart.addLineSeries({ color: '#fde047', lineWidth: 1, title: 'EMA 20' });
+      ema55Series = mainChart.addLineSeries({ color: '#00e5ff', lineWidth: 1, title: 'EMA 55' });
+      ema200Series = mainChart.addLineSeries({ color: '#c084fc', lineWidth: 2, title: 'EMA 200' });
 
-/* ===== INTERFAZ Y LÓGICA ===== */
-function switchTab(id){
-  document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
-  document.getElementById('tab-'+id).classList.add('active');
-  event.currentTarget.classList.add('active');
-}
+      // Bollinger Bands Series
+      bbUpperSeries = mainChart.addLineSeries({ color: '#818cf8', lineWidth: 1, lineStyle: 2, title: 'BB Upper' });
+      bbLowerSeries = mainChart.addLineSeries({ color: '#818cf8', lineWidth: 1, lineStyle: 2, title: 'BB Lower' });
 
-const SYMBOL='SOLUSDT',$=id=>document.getElementById(id),fmt=IND.f,usd=n=>'$'+fmt(n),pct=n=>(n>=0?'+':'')+fmt(n,2)+'%';
-const TFS=[['15m','15 min',1],['1h','1 hora',1.5],['4h','4 horas',2],['1d','Diario',2],['1w','Semanal',1.5]];
-const TF={},ctx={price:null},L=a=>a[a.length-1];
-let ALL=[],SC={},NET=0,LASTP=0;
+      // Main Volume Series (Bottom of main chart)
+      volumeSeries = mainChart.addHistogramSeries({
+        priceFormat: { type: 'volume' },
+        priceScaleId: '',
+        scaleMargins: { top: 0.8, bottom: 0 },
+      });
 
-async function getK(iv,sym=SYMBOL){
-  const r=await fetch(`https://api.binance.com/api/v3/klines?symbol=${sym}&interval=${iv}&limit=250`);
-  if(!r.ok)throw new Error(iv+' '+r.status);
-  const k=(await r.json()).slice(0,-1).map(x=>({t:x[0],o:+x[1],h:+x[2],l:+x[3],c:+x[4],v:+x[5]}));
-  const c=k.map(x=>x.c),w=c.slice(-20),m=w.reduce((a,x)=>a+x,0)/20;
-  const e12=IND.ema(c,12),e26=IND.ema(c,26),ml=e12.map((x,i)=>x-e26[i]),sg=IND.ema(ml,9);
-  return{k,close:L(c),ema20:L(IND.ema(c,20)),ema50:L(IND.ema(c,50)),ema200:L(IND.ema(c,200)),rsi:L(IND.rsiA(c,14)),atr:L(IND.atrA(k,14)),
-    hist:L(ml)-L(sg),sw:IND.swings(k.slice(-150))}}
+      // Oscillator Chart Engine
+      oscChart = LightweightCharts.createChart(oscEl, {
+        layout: {
+          background: { type: 'solid', color: '#0b0f18' },
+          textColor: '#64748b',
+          fontFamily: 'JetBrains Mono, monospace',
+        },
+        grid: {
+          vertLines: { color: '#131b2e' },
+          horzLines: { color: '#131b2e' },
+        },
+        rightPriceScale: { borderColor: '#1e293b' },
+        timeScale: { visible: false },
+      });
 
-async function loadAll(){
-  try{const r=await Promise.all(TFS.map(([k])=>getK(k)));TFS.forEach(([k],i)=>TF[k]=r[i])}
-  catch(e){$('v-why').textContent='No pude descargar velas de Binance ('+e.message+').'}
-  LASTP=0;render()}
+      oscHistogram = oscChart.addHistogramSeries({
+        color: '#00e676',
+        priceFormat: { type: 'volume' },
+      });
 
-function computeAll(p){
-  ALL=[];SC={};
-  TFS.forEach(([k])=>{const t=TF[k];if(!t)return;const v=IND.compute(t.k,k,p);SC[k]=IND.score(v);ALL.push(...v)});
-  let w=0,s=0;TFS.forEach(([k,,wt])=>{if(SC[k]!=null){s+=SC[k]*wt;w+=wt}});NET=w?s/w*100:0;LASTP=p}
+      oscSignalLine = oscChart.addLineSeries({
+        color: '#e2b13c',
+        lineWidth: 2,
+      });
 
-function buildLevels(p){
-  const raw=[],add=(v,l)=>{if(v>0&&isFinite(v))raw.push({p:v,l})},d=TF['1d'];
-  if(d){const y=d.k[d.k.length-1],P=(y.h+y.l+y.c)/3,r=y.h-y.l;
-    add(P,'Pivote diario');add(2*P-y.l,'R1');add(P-r,'S1');add(y.h,'Máx. ayer');add(y.l,'Mín. ayer')}
-  [['1h','1h'],['4h','4h']].forEach(([k,n])=>{const t=TF[k];if(!t)return;
-    add(t.ema50,'EMA50 '+n);add(t.ema200,'EMA200 '+n);
-    t.sw.lows.slice(-3).forEach(v=>add(v,'Swing '+n));t.sw.highs.slice(-3).forEach(v=>add(v,'Swing '+n))});
-  const st=p>=100?5:1,b=Math.round(p/st)*st;[-2,-1,0,1,2].forEach(i=>add(b+i*st,'Redondo'));
-  raw.sort((a,b)=>a.p-b.p);const out=[];
-  raw.forEach(x=>{const c=out[out.length-1];if(c&&(x.p-c.p)/c.p<0.004){c.p=(c.p*c.n+x.p)/(c.n+1);c.n++;c.ls.push(x.l)}else out.push({p:x.p,n:1,ls:[x.l]})});
-  out.forEach(c=>c.l=[...new Set(c.ls)].slice(0,3).join(' · '));return out}
+      // Synchronize Crosshairs between charts
+      mainChart.timeScale().subscribeVisibleTimeRangeChange(timeRange => {
+        oscChart.timeScale().setVisibleTimeRange(timeRange);
+      });
 
-function trendOf(t,price){if(!t)return{s:0,label:'—'};let s=0;s+=price>t.ema50?1:-1;s+=t.ema20>t.ema50?1:-1;return{s,label:s>=2?'Alcista':s<=-2?'Bajista':'Lateral'}}
+      // Resize observers
+      const resizeObserver = new ResizeObserver(() => {
+        mainChart.applyOptions({ width: chartEl.clientWidth, height: chartEl.clientHeight });
+        oscChart.applyOptions({ width: oscEl.clientWidth, height: oscEl.clientHeight });
+      });
+      resizeObserver.observe(chartEl);
+      resizeObserver.observe(oscEl);
 
-function computePlan(price){
-  const t15=TF['15m'],t1=TF['1h'],t4=TF['4h'];if(!t15||!t1||!t4)return null;
-  const tr4=trendOf(t4,price);
-  const Lv=buildLevels(price),ss=Lv.filter(x=>x.p<price*0.998),strong=ss.filter(x=>x.n>=2);
-  const sObj=(strong.length?strong:ss).sort((a,b)=>b.p-a.p)[0],support=sObj?sObj.p:price*0.98;
-  const entry=support,risk=0.8*t1.atr,tp2=entry+risk*3.5;
-  const lev=10,liq=Math.max(0,entry*(1-(1-0.005*lev)/lev)),distPct=(price-entry)/price*100;
-  
-  let score=0;const chips=[];const add=(v,txt)=>{score+=v;chips.push({v,txt})};
-  add(tr4.s>=2?2:tr4.s<=-2?-2:0,'4h '+tr4.label.toLowerCase());
-  const net=NET;add(net>10?1:net<-10?-1:0,'Puntaje general '+fmt(net,0));
+      // Generate Synthetic Data & Load WebSocket
+      generateHistoricalData();
+      connectBinanceWebSocket();
+    }
 
-  let kind,tag,why;
-  if(score>=1&&net>-20){kind='go';tag='Entrar Long en Soporte';why=`Precio aproximándose a zona estructural (${usd(entry)}). Operativa sin Stop Loss configurada.`}
-  else{kind='wait';tag=`Esperar zona ${usd(entry)}`;why=`Esperando mejor confluencia de precio (${fmt(distPct,2)}% actual).`}
+    // Generate Initial Realistic SOL/USDT Candle History
+    function generateHistoricalData() {
+      const count = 200;
+      let price = 142.50;
+      const now = Math.floor(Date.now() / 1000);
+      const interval = 300; // 5m in seconds
+      const data = [];
+      const volumeData = [];
 
-  return{price,entry,tp2,liq,support,src:sObj?sObj.l:'Soporte técnico',kind,tag,why,chips,lev,distPct}
-}
+      for (let i = count; i >= 0; i--) {
+        const time = now - i * interval;
+        const volatility = (Math.random() - 0.49) * 1.2;
+        const open = price;
+        const close = open + volatility;
+        const high = Math.max(open, close) + Math.random() * 0.8;
+        const low = Math.min(open, close) - Math.random() * 0.8;
+        price = close;
 
-function renderLiquidations(p){
-  const t1=TF['1h']; if(!t1) return;
-  const lows=t1.sw.lows.slice(-4);
-  const highs=t1.sw.highs.slice(-4);
-  
-  let html=`<div class="liq-box"><h3>Apalancamiento 10x · Posiciones Largas (Longs) <span>Soporte / Cascada</span></h3>`;
-  lows.forEach(sw => {
-    const liqPrice = sw * (1 - (1/10) * 0.9);
-    html += `<div class="liq-row"><span>Swing Low Base: ${usd(sw)}</span><span class="num down">Liquidación 10x: ${usd(liqPrice)}</span></div>`;
-  });
-  html += `</div><div class="liq-box"><h3>Apalancamiento 10x · Posiciones Cortas (Shorts) <span>Resistencia / Squeeze</span></h3>`;
-  highs.forEach(sw => {
-    const liqPriceShort = sw * (1 + (1/10) * 0.9);
-    html += `<div class="liq-row"><span>Swing High Base: ${usd(sw)}</span><span class="num up">Liquidación Short 10x: ${usd(liqPriceShort)}</span></div>`;
-  });
-  html += `</div>`;
-  $('liq-container').innerHTML = html;
-}
+        const isUp = close >= open;
+        data.push({ time, open, high, low, close });
+        volumeData.push({
+          time,
+          value: Math.floor(Math.random() * 5000 + 1000),
+          color: isUp ? 'rgba(0, 230, 118, 0.3)' : 'rgba(255, 82, 82, 0.3)'
+        });
+      }
 
-function renderInd(){
-  if(!ALL.length)return;
-  const cnt=a=>[a.filter(x=>x.s>0).length,a.filter(x=>x.s===0).length,a.filter(x=>x.s<0).length];
-  const [b,n,r]=cnt(ALL),N=ALL.length;
-  $('ind-sum').innerHTML=`<div class="bar"><i style="width:${b/N*100}%;background:var(--up)"></i><i style="width:${n/N*100}%;background:#566"></i><i style="width:${r/N*100}%;background:var(--down)"></i></div><div class="hint" style="margin:0 0 14px"><b class="up">${b} alcistas</b> · ${n} neutrales · <b class="down">${r} bajistas</b> (Total: ${N} indicadores maestros) · Puntaje <b class="${NET>0?'up':NET<0?'down':''}">${fmt(NET,0)}</b></div>`;
-  const names=Object.fromEntries(TFS.map(x=>[x[0],x[1]]));
-  $('ind-tf').innerHTML=Object.keys(names).filter(k=>SC[k]!=null).map(k=>{const [a,c,d]=cnt(ALL.filter(x=>x.tf===k)),s=SC[k]*100;return`<tr><td>${names[k]}</td><td class="num up">${a}</td><td class="num">${c}</td><td class="num down">${d}</td><td class="num ${s>0?'up':s<0?'down':''}">${fmt(s,0)}</td></tr>`}).join('');
-  const sel=$('ind-sel');if(!sel.options.length){Object.keys(names).forEach(k=>sel.add(new Option(names[k],k)));sel.value='1h'}
-  const g={};ALL.filter(x=>x.tf===sel.value).forEach(x=>(g[x.g]=g[x.g]||[]).push(x));
-  $('ind-grid').innerHTML=Object.keys(g).map(k=>`<div><h3>${k}</h3>${g[k].map(x=>`<div class="ir"><span>${x.n}</span><span class="num">${x.v}<i class="dot ${x.s>0?'u':x.s<0?'d':''}"></i></span><div class="tip"><b>${x.n}</b><br>${x.d||''}</div></div>`).join('')}</div>`).join('')}
+      candleData = data;
+      mainSeries.setData(candleData);
+      volumeSeries.setData(volumeData);
 
-function renderLadder(p){
-  const Lv=buildLevels(p),R=Lv.filter(x=>x.p>p).sort((a,b)=>a.p-b.p).slice(0,5).reverse(),Sp=Lv.filter(x=>x.p<=p).sort((a,b)=>b.p-a.p).slice(0,5);
-  const li=(x,k)=>`<div class="lv ${k}"><span class="num">${usd(x.p)}</span><i>${'●'.repeat(Math.min(x.n,4))}</i><em class="num">${pct((x.p/p-1)*100)}</em><small>${x.l}</small></div>`;
-  $('ladder').innerHTML=R.map(x=>li(x,'r')).join('')+`<div class="lv now"><span class="num">${usd(p)}</span><small>Precio Actual</small></div>`+Sp.map(x=>li(x,'s')).join('')}
+      // Update Legend with Latest Candle
+      const last = candleData[candleData.length - 1];
+      updateLegend(last);
 
-function render(){
-  const price=ctx.price;if(!price&&!TF['1h'])return;
-  const p=price||TF['1h'].close;
-  if(TF['1h']&&Math.abs(p/(LASTP||1)-1)>0.004)computeAll(p);
-  $('tf-body').innerHTML=TFS.map(([k,name])=>{const t=TF[k];if(!t)return`<tr><td>${name}</td><td colspan="5">—</td></tr>`;const tr=trendOf(t,p),s=SC[k]!=null?SC[k]*100:null;
-    return`<tr><td>${name}</td><td class="${tr.s>=2?'up':tr.s<=-2?'down':''}">${tr.label}</td><td class="num">${fmt(t.rsi,0)}</td><td class="num">${pct((p/t.ema50-1)*100)}</td><td class="num">${fmt(t.atr/p*100,2)}%</td><td class="num ${s>0?'up':s<0?'down':''}">${s==null?'—':fmt(s,0)}</td></tr>`}).join('');
-  if(SC['1w']!=null){const w=$('wk');w.textContent='Semanal: '+(SC['1w']>0?'LONG':'SHORT');w.className='chip '+(SC['1w']>0?'up':'dn')}
-  renderInd();if(TF['1d'])renderLadder(p);if(TF['1h'])renderLiquidations(p);
-  
-  const P=computePlan(p);if(!P)return;
-  $('verdict').className='verdict '+P.kind;$('v-tag').textContent=P.tag;$('v-why').textContent=P.why;
-  $('v-chips').innerHTML=P.chips.map(c=>`<span class="chip ${c.v>0?'up':c.v<0?'dn':''}">${c.txt}</span>`).join('');
-  $('p-entry').textContent=usd(P.entry);$('p-entry-s').textContent=`${fmt(P.distPct,2)}% bajo spot`;
-  $('p-liq').textContent=usd(P.liq);
-  $('p-tp2').textContent=usd(P.tp2);$('p-tp2-s').textContent=`+3.5R`;
-  $('levels-note').textContent=`Soporte estructural base: ${usd(P.support)}.`;
-}
+      // Calculate Indicators
+      updateTechnicalOverlays();
+    }
 
-let ws,lastDraw=0;
-function connect(){
-  ws=new WebSocket('wss://stream.binance.com:9443/ws/solusdt@trade');
-  ws.onopen=()=>{$('conn').textContent='Conectado';$('conn').className='ok'};
-  ws.onclose=()=>{$('conn').textContent='Reconectando…';$('conn').className='bad';setTimeout(connect,2000)};
-  ws.onmessage=e=>{ctx.price=parseFloat(JSON.parse(e.data).p);$('price').textContent=usd(ctx.price);const now=Date.now();if(now-lastDraw>1000){lastDraw=now;render()}}}
+    // Connect to Real-Time Binance WebSocket
+    function connectBinanceWebSocket() {
+      if (ws) ws.close();
 
-window.onload=()=>{connect();loadAll();setInterval(loadAll,60000)};
-</script>
+      const symbol = 'solusdt';
+      const wsUrl = `wss://stream.binance.com:9443/ws/${symbol}@kline_1m`;
+      
+      try {
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          document.getElementById('ws-status').innerHTML = `
+            <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block mr-1 pulse-dot"></span> LIVE WS
+          `;
+        };
+
+        ws.onmessage = (event) => {
+          const message = JSON.parse(event.data);
+          if (message.e === 'kline') {
+            const k = message.k;
+            const candle = {
+              time: Math.floor(k.t / 1000),
+              open: parseFloat(k.o),
+              high: parseFloat(k.h),
+              low: parseFloat(k.l),
+              close: parseFloat(k.c)
+            };
+
+            // Update main candle series live
+            mainSeries.update(candle);
+            updateLegend(candle);
+
+            // Update Live Metrics Header
+            document.getElementById('live-price').innerText = `$${candle.close.toFixed(2)}`;
+            
+            // Recalculate dynamic overlays on real-time price tick
+            const lastIdx = candleData.length - 1;
+            if (candleData[lastIdx] && candleData[lastIdx].time === candle.time) {
+              candleData[lastIdx] = candle;
+            } else {
+              candleData.push(candle);
+            }
+            
+            updateTechnicalOverlays();
+          }
+        };
+
+        ws.onerror = () => {
+          document.getElementById('ws-status').innerHTML = `
+            <span class="w-2 h-2 rounded-full bg-amber-400 inline-block mr-1"></span> SIMULATED
+          `;
+        };
+      } catch (e) {
+        console.warn("WebSocket failed, running local simulation mode.", e);
+      }
+    }
+
+    // Update Top Header Legend
+    function updateLegend(c) {
+      document.getElementById('leg-open').innerText = c.open.toFixed(2);
+      document.getElementById('leg-high').innerText = c.high.toFixed(2);
+      document.getElementById('leg-low').innerText = c.low.toFixed(2);
+      document.getElementById('leg-close').innerText = c.close.toFixed(2);
+    }
+
+    // Main Technical Analysis Computations & Overlays Render
+    function updateTechnicalOverlays() {
+      if (!candleData.length) return;
+
+      const closes = candleData.map(c => c.close);
+      const times = candleData.map(c => c.time);
+
+      // 1. EMAs
+      if (flags.emas) {
+        const ema20 = calculateEMA(closes, 20);
+        const ema55 = calculateEMA(closes, 55);
+        const ema200 = calculateEMA(closes, 200);
+
+        ema20Series.setData(times.map((t, i) => ({ time: t, value: ema20[i] })));
+        ema55Series.setData(times.map((t, i) => ({ time: t, value: ema55[i] })));
+        ema200Series.setData(times.map((t, i) => ({ time: t, value: ema200[i] })));
+      } else {
+        ema20Series.setData([]);
+        ema55Series.setData([]);
+        ema200Series.setData([]);
+      }
+
+      // 2. Bollinger Bands
+      if (flags.bb) {
+        const bb = calculateBollingerBands(closes, 20, 2);
+        bbUpperSeries.setData(times.map((t, i) => ({ time: t, value: bb.upper[i] })));
+        bbLowerSeries.setData(times.map((t, i) => ({ time: t, value: bb.lower[i] })));
+      } else {
+        bbUpperSeries.setData([]);
+        bbLowerSeries.setData([]);
+      }
+
+      // 3. Signals & Markers Overlay
+      const markers = [];
+      if (flags.oracleSignals) {
+        for (let i = 20; i < candleData.length; i += 18) {
+          const isBuy = i % 36 !== 0;
+          markers.push({
+            time: candleData[i].time,
+            position: isBuy ? 'belowBar' : 'aboveBar',
+            color: isBuy ? '#00e676' : '#ff5252',
+            shape: isBuy ? 'arrowUp' : 'arrowDown',
+            text: isBuy ? 'TACTICAL BUY' : 'TACTICAL SELL',
+          });
+        }
+      }
+
+      // Safeguard Markers
+      if (flags.safeguard) {
+        for (let i = 35; i < candleData.length; i += 42) {
+          markers.push({
+            time: candleData[i].time,
+            position: 'belowBar',
+            color: '#00e5ff',
+            shape: 'circle',
+            text: 'SAFEGUARD CONFIRMED',
+          });
+        }
+      }
+
+      mainSeries.setMarkers(markers.sort((a, b) => a.time - b.time));
+
+      // 4. Dynamic S/R Levels & Fibonacci Retracements
+      clearPriceLines();
+
+      if (flags.sr || flags.fibo) {
+        const highPrice = Math.max(...candleData.slice(-60).map(c => c.high));
+        const lowPrice = Math.min(...candleData.slice(-60).map(c => c.low));
+        const diff = highPrice - lowPrice;
+
+        // Support / Resistance
+        if (flags.sr) {
+          addPriceLine(highPrice, '#ff5252', 'Resistance Key Zone');
+          addPriceLine(lowPrice, '#00e676', 'Support Key Zone');
+        }
+
+        // Auto Fibonacci Levels
+        if (flags.fibo) {
+          const fibLevels = [0.236, 0.382, 0.5, 0.618, 0.786];
+          fibLevels.forEach(lvl => {
+            const levelPrice = highPrice - diff * lvl;
+            addPriceLine(levelPrice, '#e2b13c', `Fib ${lvl}`, 2);
+          });
+        }
+      }
+
+      // 5. Oracle Oscillator Calculation
+      if (flags.oscillator) {
+        const oscData = [];
+        const oscLine = [];
+        const ema20 = calculateEMA(closes, 12);
+        const ema55 = calculateEMA(closes, 26);
+
+        for (let i = 0; i < candleData.length; i++) {
+          const val = (ema20[i] - ema55[i]) * 5;
+          oscData.push({
+            time: candleData[i].time,
+            value: val,
+            color: val >= 0 ? '#00e676' : '#ff5252'
+          });
+          oscLine.push({
+            time: candleData[i].time,
+            value: val * 0.7
+          });
+        }
+        oscHistogram.setData(oscData);
+        oscSignalLine.setData(oscLine);
+      } else {
+        oscHistogram.setData([]);
+        oscSignalLine.setData([]);
+      }
+    }
+
+    // Helper: Add Horizontal Line to Main Chart
+    function addPriceLine(price, color, title, lineStyle = 1) {
+      const line = mainSeries.createPriceLine({
+        price: price,
+        color: color,
+        lineWidth: 1,
+        lineStyle: lineStyle,
+        axisLabelVisible: true,
+        title: title,
+      });
+      priceLines.push(line);
+    }
+
+    // Helper: Clear Lines
+    function clearPriceLines() {
+      priceLines.forEach(line => mainSeries.removePriceLine(line));
+      priceLines = [];
+    }
+
+    // Math Utility: Exponential Moving Average
+    function calculateEMA(data, period) {
+      const k = 2 / (period + 1);
+      let emaArray = [data[0]];
+      for (let i = 1; i < data.length; i++) {
+        emaArray.push(data[i] * k + emaArray[i - 1] * (1 - k));
+      }
+      return emaArray;
+    }
+
+    // Math Utility: Bollinger Bands
+    function calculateBollingerBands(data, period, stdDevMultiplier) {
+      const upper = [];
+      const lower = [];
+
+      for (let i = 0; i < data.length; i++) {
+        if (i < period - 1) {
+          upper.push(data[i]);
+          lower.push(data[i]);
+          continue;
+        }
+        const slice = data.slice(i - period + 1, i + 1);
+        const mean = slice.reduce((a, b) => a + b, 0) / period;
+        const variance = slice.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / period;
+        const stdDev = Math.sqrt(variance);
+
+        upper.push(mean + stdDev * stdDevMultiplier);
+        lower.push(mean - stdDev * stdDevMultiplier);
+      }
+      return { upper, lower };
+    }
+
+    // UI Event Listeners Initialization
+    function setupEventListeners() {
+      // Toggle Switches
+      document.getElementById('chk-oracle-signals').addEventListener('change', e => { flags.oracleSignals = e.target.checked; updateTechnicalOverlays(); });
+      document.getElementById('chk-safeguard').addEventListener('change', e => { flags.safeguard = e.target.checked; updateTechnicalOverlays(); });
+      document.getElementById('chk-oscillator').addEventListener('change', e => { flags.oscillator = e.target.checked; updateTechnicalOverlays(); });
+      document.getElementById('chk-emas').addEventListener('change', e => { flags.emas = e.target.checked; updateTechnicalOverlays(); });
+      document.getElementById('chk-bb').addEventListener('change', e => { flags.bb = e.target.checked; updateTechnicalOverlays(); });
+      document.getElementById('chk-fibo').addEventListener('change', e => { flags.fibo = e.target.checked; updateTechnicalOverlays(); });
+      document.getElementById('chk-sr').addEventListener('change', e => { flags.sr = e.target.checked; updateTechnicalOverlays(); });
+      document.getElementById('chk-adx').addEventListener('change', e => { flags.adx = e.target.checked; updateTechnicalOverlays(); });
+
+      // Reset Button
+      document.getElementById('reset-indicators').addEventListener('click', () => {
+        document.querySelectorAll('#sidebar input[type="checkbox"]').forEach(chk => chk.checked = true);
+        Object.keys(flags).forEach(k => flags[k] = true);
+        updateTechnicalOverlays();
+      });
+
+      // Sidebar Mobile Toggle
+      const sidebar = document.getElementById('sidebar');
+      document.getElementById('toggle-sidebar').addEventListener('click', () => {
+        sidebar.classList.toggle('-translate-x-full');
+      });
+
+      // Timeframe buttons styling & state handler
+      const tfButtons = document.querySelectorAll('.tf-btn');
+      tfButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          tfButtons.forEach(b => {
+            b.className = 'tf-btn px-2.5 py-1 rounded text-slate-400 hover:text-white transition';
+          });
+          btn.className = 'tf-btn px-2.5 py-1 rounded bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30';
+          currentTF = btn.dataset.tf;
+          generateHistoricalData();
+        });
+      });
+    }
+
+    // App Initialization on Load
+    window.onload = function() {
+      initCharts();
+      setupEventListeners();
+    };
+  </script>
 </body>
 </html>
